@@ -13,6 +13,7 @@ const menuItems: MenuItem[] = [
   { label: "Meus clientes", page: "/dashboard" },
   { label: "Cadastrar", page: "/auth/signup" },
   { label: "Login", page: "/auth/login" },
+  { label: "", page: "/auth/login" },
 ];
 
 export default function Header() {
@@ -22,7 +23,7 @@ export default function Header() {
   const pathname = usePathname();
 
   useEffect(() => {
-    setMounted(true); // só libera renderização no client
+    setMounted(true);
   }, []);
 
   useEffect(() => {
@@ -30,7 +31,7 @@ export default function Header() {
 
     let filteredMenu: MenuItem[] = [];
 
-    if (pathname === "/auth/login") {
+    if (pathname === "/auth/login" || pathname === "/") {
       filteredMenu = menuItems.filter((item) => item.label === "Cadastrar");
     } else if (pathname === "/auth/signup") {
       filteredMenu = menuItems.filter((item) => item.label === "Login");
@@ -57,10 +58,8 @@ export default function Header() {
         className="w-[100px]"
       />
 
-      {/* Só renderiza menus depois de montar no client */}
       {mounted && menuList.length > 0 && (
         <>
-          {/* Menu Desktop */}
           <nav className="hidden md:flex items-center gap-6">
             {menuList.map((item) => (
               <a
@@ -77,7 +76,6 @@ export default function Header() {
             )}
           </nav>
 
-          {/* Botão Mobile */}
           <button
             className="md:hidden text-white"
             onClick={() => setIsOpen(!isOpen)}
@@ -85,7 +83,6 @@ export default function Header() {
             {isOpen ? <X size={28} /> : <Menu size={28} />}
           </button>
 
-          {/* Menu Mobile */}
           {isOpen && (
             <div className="absolute top-[70px] left-0 w-full bg-[#1C3552] flex flex-col items-center gap-4 py-6 md:hidden z-50 shadow-lg">
               {menuList.map((item) => (
