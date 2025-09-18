@@ -1,208 +1,272 @@
 "use client";
 
-import { useForm } from "react-hook-form";
-import { yupResolver } from "@hookform/resolvers/yup";
-import * as yup from "yup";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import Util from "@/utils/Util";
+import { Card, CardHeader } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Search,
+  Filter,
+  ArrowRight,
+  EllipsisVertical,
+  Plus,
+  Check,
+} from "lucide-react";
+import { Divider } from "antd";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
-function formatPhone(value: string) {
-  value = value.replace(/\D/g, "");
-  if (value.length <= 10) {
-    return value.replace(/(\d{2})(\d{4})(\d{0,4})/, "($1) $2-$3");
-  } else {
-    return value.replace(/(\d{2})(\d{5})(\d{0,4})/, "($1) $2-$3");
-  }
-}
+export default function ClientManagement() {
+  const [selectedClient, setSelectedClient] = useState("Nome do cliente");
 
-const schema = yup.object({
-  fullname: yup
-    .string()
-    .min(3, "O campo deve ter ao menos 3 caracteres")
-    .required("O nome completo é obrigatório"),
-  cpforcnpj: yup
-    .string()
-    .required("O CPF/CNPJ é obrigatório")
-    .test(
-      "is-valid-cpf-cnpj",
-      "CPF/CNPJ inválido",
-      (value) => value !== undefined && Util.validateCpfOrCnpj(value)
-    ),
-  address: yup
-    .string()
-    .min(3, "O campo deve ter ao menos 3 caracteres")
-    .required("O endereço é obrigatório"),
-  email: yup
-    .string()
-    .email("E-mail inválido")
-    .required("O e-mail é obrigatório"),
-  phone: yup
-    .string()
-    .required("O telefone é obrigatório")
-    .test("is-valid-phone", "Telefone inválido", (value) => {
-      if (!value) return false;
-      const digits = value.replace(/\D/g, "");
-      return digits.length >= 10 && digits.length <= 11;
-    }),
-});
+  const clients = [
+    "Nome do cliente",
+    "Nome do cliente",
+    "Nome do cliente",
+    "Nome do cliente",
+    "Nome do cliente",
+    "Nome do cliente",
+  ];
 
-type FormData = yup.InferType<typeof schema>;
+  const documentTypes = [
+    { id: "procuracao-inss", label: "Procuração INSS", checked: true },
+    {
+      id: "declaracao-nao-recebimento",
+      label: "Declaração de não recebimento",
+      checked: false,
+    },
+    {
+      id: "termo-representacao",
+      label: "Termo de representação",
+      checked: false,
+    },
+    {
+      id: "autodeclaracao-rural",
+      label: "Autodeclaração rural",
+      checked: false,
+    },
+    {
+      id: "contrato-honorarios",
+      label: "Contrato de honorários",
+      checked: false,
+    },
+  ];
 
-export default function Dashboard() {
-  const {
-    register,
-    handleSubmit,
-    setValue,
-    formState: { errors },
-  } = useForm<FormData>({
-    resolver: yupResolver(schema),
-    mode: "onChange",
-  });
-
-  const onSubmit = (data: FormData) => {
-    console.log("Cliente cadastrado:", data);
-  };
-
-  const errorClass =
-    "border-[1px] focus-visible:border-[red] focus-visible:shadow-[0_0_15px_-4px_#ff0000a4]";
+  const petitionModels = [
+    {
+      id: "procuracao-declaracao",
+      label: "Procuração e declaração judiciais",
+      checked: false,
+    },
+    {
+      id: "procuracao-ppp",
+      label: "Procuração PPP",
+      checked: false,
+    },
+    {
+      id: "modelo-peticao-loas-deficientes",
+      label: "Modelo Petição - LOAS Deficientes",
+      checked: false,
+    },
+    {
+      id: "modelo-peticao-loas-idoso",
+      label: "Modelo Petição - LOAS Idoso",
+      checked: false,
+    },
+    {
+      id: "modelo-peticao-auxilio-doenca",
+      label: "Modelo Petição - Auxílio Doença",
+      checked: false,
+    },
+  ];
 
   return (
-    <div className="flex justify-center w-full min-h-[calc(100vh-70px)]">
-      <Card className="w-full max-w-[75%] max-md:max-w-full shadow-none py-10 px-4 sm:px-4 max-md:px-2 border-0 gap-[10px]">
-        <CardHeader className="text-[#9A9A9A] font-light text-[14px]">
-          Cadastro de clientes
-        </CardHeader>
-        <CardContent>
-          <h1 className="text-[24px] text-[#1C3552] font-medium">
-            Cadastrar clientes
-          </h1>
-          <form
-            className="space-y-4 mt-[20px]"
-            onSubmit={handleSubmit(onSubmit)}
-          >
-            <div className="space-y-2">
-              <Label htmlFor="fullname" className="font-medium text-[#1C3552]">
-                Nome completo do cliente
-              </Label>
-              <Input
-                id="fullname"
-                {...register("fullname")}
-                className={` focus-visible:ring-[0px] rounded-[8px] w-full p-4 placeholder:text-[#CCCCCC] placeholder:italic ${
-                  errors.fullname
-                    ? errorClass
-                    : " border-[1px] focus-visible:border-[#00a2ffa3] focus-visible:shadow-[0_0_15px_-4px_#0066ffa2]"
-                }`}
-                placeholder="Digite aqui..."
-              />
-              {errors.fullname && (
-                <p className="text-red-500 text-sm">
-                  {errors.fullname.message}
-                </p>
-              )}
+    <div className="min-h-screen p-6 w-[100%] ">
+      <div className="w-[85%] mx-auto">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 w-full">
+          <Card className="p-6 border-none shadow-none gap-5 ">
+            <CardHeader className="text-[#9A9A9A] font-light text-[14px] px-0">
+              Cadastro de clientes &gt; Meus clientes
+            </CardHeader>
+            <h2 className="text-[24px] font-medium text-[#1C3552]">
+              Meus clientes
+            </h2>
+            <div className="flex gap-2">
+              <div className="relative flex-1 w-[400px] ">
+                <Input
+                  placeholder="Pesquisar cliente..."
+                  className="pl-[15px] text-sm rounded-[50px] "
+                />
+                <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-black w-4 h-4" />
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                className="text-[#13529C] bg-[#F3F3F3] border-none "
+              >
+                <Filter className="w-4 h-4 mr-1" />
+                Filtrar por
+              </Button>
+            </div>
+            <div className="space-y-1 flex  flex-col gap-2">
+              <Button className="text-[16px] text-[#529FF6] w-full border-2 border-[#529FF6] mb-2 rounded-[8px] bg-transparent flex items-center justify-center ">
+                Adicionar novo cliente <Plus width={25} height={25} />
+              </Button>
+
+              {clients.map((client, index) => (
+                <div
+                  key={index}
+                  className="flex items-center justify-between py-2 px-3 hover:bg-gray-50  cursor-pointer border-[#CCCCCC] border-1 rounded-[8px] shadow-[0px_2px_4px_#0000001A] "
+                  onClick={() => setSelectedClient(client)}
+                >
+                  <span className="text-[16px] text-[#1C3552] ">{client}</span>
+                  <div className="flex items-center gap-2">
+                    <span className=" text-[#13529C] bg-[#529FF626] px-2 py-[0px] text-[14px] rounded-[50px] font-medium flex flex-row items-center flex-nowrap gap-[10px] ">
+                      Gerar documento
+                      <ArrowRight width={12} />
+                    </span>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger>
+                        <EllipsisVertical className="w-4 h-4 text-blue-600" />
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent
+                        side="bottom"
+                        align="end"
+                        className=" rounded-[12px] rounded-tr-none"
+                      >
+                        <DropdownMenuItem className=" text-[#1C3552] text-[14px] ">
+                          Editar dados
+                        </DropdownMenuItem>
+                        <Divider className="p-0 m-0" style={{ margin: 0 }} />
+                        <DropdownMenuItem className=" text-[#1C3552] text-[14px] ">
+                          Ver histórico{" "}
+                        </DropdownMenuItem>
+                        <Divider className="p-0 m-0" style={{ margin: 0 }} />
+                        <DropdownMenuItem className=" text-[#1C3552] text-[14px] ">
+                          Excluir cliente{" "}
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </Card>
+
+          <Card className=" border-[#CCCCCC] border-1 rounded-[8px] gap-[10px] p-[15px] py-[10px] ">
+            <h2 className="text-[#1C3552] font-medium text-[20px] mb-4">
+              {selectedClient}
+            </h2>
+
+            <div className="mb-0">
+              <h3 className="text-[16px] font-medium text-[#1C3552] mb-3">
+                Dados do cliente:
+              </h3>
+              <div className="grid grid-cols-2 gap-3 ">
+                <div className="  flex flex-row flex-nowrap items-center gap-[5px] ">
+                  <label className="text-[16px]  font-medium text-gray-500 ">
+                    CPF/CNPJ:
+                  </label>
+                  <div className="text-[16px] font-normal text-gray-700">
+                    XXXXXXXXXXXXX
+                  </div>
+                </div>
+                <div className="  flex flex-row flex-nowrap items-center gap-[5px] ">
+                  <label className="text-[16px]  font-medium text-gray-500">
+                    E-mail:
+                  </label>
+                  <div className="text-[16px] font-normal text-gray-700">
+                    XXXXXXXXXXXXX
+                  </div>
+                </div>
+                <div className="  flex flex-row flex-nowrap items-center gap-[5px] ">
+                  <label className="text-[16px]  font-medium text-gray-500">
+                    Endereço:
+                  </label>
+                  <div className="text-[16px] font-normal text-gray-700">
+                    XXXXXXXXXXXXX
+                  </div>
+                </div>
+                <div className="  flex flex-row flex-nowrap items-center gap-[5px] ">
+                  <label className="text-[16px]  font-medium text-gray-500">
+                    Telefone:
+                  </label>
+                  <div className="text-[16px] font-normal text-gray-700">
+                    XXXXXXXXXXXXX
+                  </div>
+                </div>
+              </div>
+            </div>
+            <Divider style={{ margin: 0 }} />
+
+            <div className="mb-0">
+              <h3 className="text-[16px] font-medium text-[#1C3552] mb-3">
+                Gerar novo documento:
+              </h3>
+
+              <h4 className="text-[14px] text-[#9A9A9A] mb-2">
+                Tipo de documento:
+              </h4>
+              <div className="space-y-3 grid grid-cols-2 gap-[20px] ">
+                <div>
+                  <div className="space-y-2 flex flex-col gap-[5px] ">
+                    {documentTypes.map((doc) => (
+                      <div
+                        key={doc.id}
+                        className="flex items-center space-x-2 bg-[#F5F5F5] rounded-[8px] py-[5px] pl-[10px] "
+                      >
+                        <Checkbox
+                          id={doc.id}
+                          checked={doc.checked}
+                          className="w-4 h-4 border-[#A7A7A7] "
+                        />
+                        <label
+                          htmlFor={doc.id}
+                          className="text-[16px] text-[#1C3552] cursor-pointer"
+                        >
+                          {doc.label}
+                        </label>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <div className="space-y-2 flex flex-col gap-[5px] ">
+                    {petitionModels.map((model) => (
+                      <div
+                        key={model.id}
+                        className="flex items-center space-x-2 bg-[#F5F5F5] rounded-[8px] py-[5px] pl-[10px] "
+                      >
+                        <Checkbox
+                          id={model.id}
+                          checked={model.checked}
+                          className="w-4 h-4 border-[#A7A7A7] "
+                        />
+                        <label
+                          htmlFor={model.id}
+                          className="text-[16px] text-[#1C3552] cursor-pointer"
+                        >
+                          {model.label}
+                        </label>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
             </div>
 
-            <div className="space-y-2 relative">
-              <Label htmlFor="cpforcnpj" className="font-medium text-[#1C3552]">
-                CPF/CNPJ
-              </Label>
-              <Input
-                id="cpforcnpj"
-                {...register("cpforcnpj")}
-                onChange={(e) =>
-                  setValue("cpforcnpj", Util.formatCpfCnpj(e.target.value), {
-                    shouldValidate: true,
-                  })
-                }
-                className={` focus-visible:ring-[0px] rounded-[8px] w-full p-4 placeholder:text-[#CCCCCC] placeholder:italic ${
-                  errors.cpforcnpj
-                    ? errorClass
-                    : " border-[1px] focus-visible:border-[#00a2ffa3] focus-visible:shadow-[0_0_15px_-4px_#0066ffa2]"
-                }`}
-                placeholder="Digite aqui..."
-              />
-              {errors.cpforcnpj && (
-                <p className="text-red-500 text-sm">
-                  {errors.cpforcnpj.message}
-                </p>
-              )}
-            </div>
-
-            <div className="space-y-2 relative">
-              <Label htmlFor="address" className="font-medium text-[#1C3552]">
-                Endereço
-              </Label>
-              <Input
-                id="address"
-                {...register("address")}
-                className={` focus-visible:ring-[0px] rounded-[8px] w-full p-4 placeholder:text-[#CCCCCC] placeholder:italic ${
-                  errors.address
-                    ? errorClass
-                    : " border-[1px] focus-visible:border-[#00a2ffa3] focus-visible:shadow-[0_0_15px_-4px_#0066ffa2]"
-                }`}
-                placeholder="Digite aqui..."
-              />
-              {errors.address && (
-                <p className="text-red-500 text-sm">{errors.address.message}</p>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="email" className="font-medium text-[#1C3552]">
-                E-mail
-              </Label>
-              <Input
-                id="email"
-                type="email"
-                {...register("email")}
-                className={` focus-visible:ring-[0px] rounded-[8px] w-full p-4 placeholder:text-[#CCCCCC] placeholder:italic ${
-                  errors.email
-                    ? errorClass
-                    : " border-[1px] focus-visible:border-[#00a2ffa3] focus-visible:shadow-[0_0_15px_-4px_#0066ffa2]"
-                }`}
-                placeholder="Digite aqui..."
-              />
-              {errors.email && (
-                <p className="text-red-500 text-sm">{errors.email.message}</p>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="phone" className="font-medium text-[#1C3552]">
-                Telefone
-              </Label>
-              <Input
-                id="phone"
-                {...register("phone")}
-                onChange={(e) =>
-                  setValue("phone", formatPhone(e.target.value), {
-                    shouldValidate: true,
-                  })
-                }
-                className={` focus-visible:ring-[0px] rounded-[8px] w-full p-4 placeholder:text-[#CCCCCC] placeholder:italic ${
-                  errors.phone
-                    ? errorClass
-                    : " border-[1px] focus-visible:border-[#00a2ffa3] focus-visible:shadow-[0_0_15px_-4px_#0066ffa2]"
-                }`}
-                maxLength={15}
-                placeholder="Digite aqui..."
-              />
-              {errors.phone && (
-                <p className="text-red-500 text-sm">{errors.phone.message}</p>
-              )}
-            </div>
-
-            <Button
-              type="submit"
-              className="w-fit bg-[#529FF6] font-medium text-[16px] hover:bg-blue-700 text-white py-4  focus-visible:ring-[0px] rounded-[8px] mt-[20px]"
-            >
-              Cadastrar cliente
+            <Button className=" rounded-[8px] h-[43px] w-[205px] bg-[#529FF6] hover:bg-blue-700 text-white text-[16px]  ">
+              Gerar documento <Check className=" w-[36px] " />
             </Button>
-          </form>
-        </CardContent>
-      </Card>
+          </Card>
+        </div>
+      </div>
     </div>
   );
 }
