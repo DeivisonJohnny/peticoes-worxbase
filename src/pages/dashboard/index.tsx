@@ -20,74 +20,93 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useRouter } from "next/router";
 
-export default function ClientManagement() {
+const clients = [
+  "Nome do cliente",
+  "Nome do cliente",
+  "Nome do cliente",
+  "Nome do cliente",
+  "Nome do cliente",
+  "Nome do cliente",
+];
+
+const documentTypes = [
+  { id: "procuracao-inss", label: "Procuração INSS", checked: true },
+  {
+    id: "declaracao-nao-recebimento",
+    label: "Declaração de não recebimento",
+    checked: false,
+  },
+  {
+    id: "termo-representacao",
+    label: "Termo de representação",
+    checked: false,
+  },
+  {
+    id: "autodeclaracao-rural",
+    label: "Autodeclaração rural",
+    checked: false,
+  },
+  {
+    id: "contrato-honorarios",
+    label: "Contrato de honorários",
+    checked: false,
+  },
+];
+
+const petitionModels = [
+  {
+    id: "procuracao-declaracao",
+    label: "Procuração e declaração judiciais",
+    checked: false,
+  },
+  {
+    id: "procuracao-ppp",
+    label: "Procuração PPP",
+    checked: false,
+  },
+  {
+    id: "modelo-peticao-loas-deficientes",
+    label: "Modelo Petição - LOAS Deficientes",
+    checked: false,
+  },
+  {
+    id: "modelo-peticao-loas-idoso",
+    label: "Modelo Petição - LOAS Idoso",
+    checked: false,
+  },
+  {
+    id: "modelo-peticao-auxilio-doenca",
+    label: "Modelo Petição - Auxílio Doença",
+    checked: false,
+  },
+];
+
+export default function Dashboard() {
   const [selectedClient, setSelectedClient] = useState("Nome do cliente");
+  const [documents, setDocuments] = useState(documentTypes);
+  const [petitions, setPetitions] = useState(petitionModels);
 
-  const clients = [
-    "Nome do cliente",
-    "Nome do cliente",
-    "Nome do cliente",
-    "Nome do cliente",
-    "Nome do cliente",
-    "Nome do cliente",
-  ];
+  const router = useRouter();
 
-  const documentTypes = [
-    { id: "procuracao-inss", label: "Procuração INSS", checked: true },
-    {
-      id: "declaracao-nao-recebimento",
-      label: "Declaração de não recebimento",
-      checked: false,
-    },
-    {
-      id: "termo-representacao",
-      label: "Termo de representação",
-      checked: false,
-    },
-    {
-      id: "autodeclaracao-rural",
-      label: "Autodeclaração rural",
-      checked: false,
-    },
-    {
-      id: "contrato-honorarios",
-      label: "Contrato de honorários",
-      checked: false,
-    },
-  ];
+  const toggleDocument = (id: string, checked: boolean) => {
+    setDocuments((prev) =>
+      prev.map((doc) => (doc.id === id ? { ...doc, checked } : doc))
+    );
+  };
 
-  const petitionModels = [
-    {
-      id: "procuracao-declaracao",
-      label: "Procuração e declaração judiciais",
-      checked: false,
-    },
-    {
-      id: "procuracao-ppp",
-      label: "Procuração PPP",
-      checked: false,
-    },
-    {
-      id: "modelo-peticao-loas-deficientes",
-      label: "Modelo Petição - LOAS Deficientes",
-      checked: false,
-    },
-    {
-      id: "modelo-peticao-loas-idoso",
-      label: "Modelo Petição - LOAS Idoso",
-      checked: false,
-    },
-    {
-      id: "modelo-peticao-auxilio-doenca",
-      label: "Modelo Petição - Auxílio Doença",
-      checked: false,
-    },
-  ];
+  const togglePetition = (id: string, checked: boolean) => {
+    setPetitions((prev) =>
+      prev.map((petition) =>
+        petition.id === id ? { ...petition, checked } : petition
+      )
+    );
+  };
 
   return (
-    <div className="min-h-screen p-6 w-[100%] ">
-      <div className="w-[85%] mx-auto">
+    <div className="min-h-screen p-2 w-[100%] ">
+      <div className=" max-w-[1440px] w-full mx-auto">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 w-full">
           <Card className="p-6 border-none shadow-none gap-5 ">
             <CardHeader className="text-[#9A9A9A] font-light text-[14px] px-0">
@@ -97,7 +116,7 @@ export default function ClientManagement() {
               Meus clientes
             </h2>
             <div className="flex gap-2">
-              <div className="relative flex-1 w-[400px] ">
+              <div className="relative flex-1 max-w-[400px] ">
                 <Input
                   placeholder="Pesquisar cliente..."
                   className="pl-[15px] text-sm rounded-[50px] "
@@ -114,7 +133,7 @@ export default function ClientManagement() {
               </Button>
             </div>
             <div className="space-y-1 flex  flex-col gap-2">
-              <Button className="text-[16px] text-[#529FF6] w-full border-2 border-[#529FF6] mb-2 rounded-[8px] bg-transparent flex items-center justify-center ">
+              <Button className="text-[16px] text-[#529FF6] w-full border-2 border-[#529FF6] mb-2 rounded-[8px] bg-transparent flex items-center justify-center hover:bg-blue-700  hover:text-white hover:border-blue-600 cursor-pointer ">
                 Adicionar novo cliente <Plus width={25} height={25} />
               </Button>
 
@@ -143,12 +162,17 @@ export default function ClientManagement() {
                           Editar dados
                         </DropdownMenuItem>
                         <Divider className="p-0 m-0" style={{ margin: 0 }} />
-                        <DropdownMenuItem className=" text-[#1C3552] text-[14px] ">
-                          Ver histórico{" "}
+                        <DropdownMenuItem
+                          className=" text-[#1C3552] text-[14px] "
+                          onClick={() =>
+                            router.push(`/history/${"asdakshdkahdkja"}`)
+                          }
+                        >
+                          Ver histórico
                         </DropdownMenuItem>
                         <Divider className="p-0 m-0" style={{ margin: 0 }} />
                         <DropdownMenuItem className=" text-[#1C3552] text-[14px] ">
-                          Excluir cliente{" "}
+                          Excluir cliente
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
@@ -215,15 +239,18 @@ export default function ClientManagement() {
               <div className="space-y-3 grid grid-cols-2 gap-[20px] ">
                 <div>
                   <div className="space-y-2 flex flex-col gap-[5px] ">
-                    {documentTypes.map((doc) => (
+                    {documents.map((doc) => (
                       <div
                         key={doc.id}
-                        className="flex items-center space-x-2 bg-[#F5F5F5] rounded-[8px] py-[5px] pl-[10px] "
+                        className="flex items-center space-x-2 bg-[#F5F5F5] rounded-[8px] py-[5px] pl-[10px]"
                       >
                         <Checkbox
                           id={doc.id}
                           checked={doc.checked}
-                          className="w-4 h-4 border-[#A7A7A7] "
+                          onCheckedChange={(checked) =>
+                            toggleDocument(doc.id, checked as boolean)
+                          }
+                          className="w-4 h-4 border-[#A7A7A7]"
                         />
                         <label
                           htmlFor={doc.id}
@@ -238,7 +265,7 @@ export default function ClientManagement() {
 
                 <div>
                   <div className="space-y-2 flex flex-col gap-[5px] ">
-                    {petitionModels.map((model) => (
+                    {petitions.map((model) => (
                       <div
                         key={model.id}
                         className="flex items-center space-x-2 bg-[#F5F5F5] rounded-[8px] py-[5px] pl-[10px] "
@@ -246,6 +273,9 @@ export default function ClientManagement() {
                         <Checkbox
                           id={model.id}
                           checked={model.checked}
+                          onCheckedChange={(checked) =>
+                            togglePetition(model.id, checked as boolean)
+                          }
                           className="w-4 h-4 border-[#A7A7A7] "
                         />
                         <label
