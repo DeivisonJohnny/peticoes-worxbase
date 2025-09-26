@@ -145,7 +145,10 @@ export default function Dashboard() {
                 >
                   <span className="text-[16px] text-[#1C3552] ">{client}</span>
                   <div className="flex items-center gap-2">
-                    <span className=" text-[#13529C] bg-[#529FF626] px-2 py-[0px] text-[14px] rounded-[50px] font-medium flex flex-row items-center flex-nowrap gap-[10px] ">
+                    <span
+                      className=" text-[#13529C] bg-[#529FF626] px-2 py-[0px] text-[14px] rounded-[50px] font-medium flex flex-row items-center flex-nowrap gap-[10px] cursor-pointer "
+                      onClick={() => router.push("/documents")}
+                    >
                       Gerar documento
                       <ArrowRight width={12} />
                     </span>

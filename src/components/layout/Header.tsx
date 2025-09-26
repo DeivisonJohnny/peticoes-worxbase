@@ -13,7 +13,7 @@ const menuItems: MenuItem[] = [
   { label: "Meus clientes", page: "/dashboard" },
   { label: "Cadastrar", page: "/auth/signup" },
   { label: "Login", page: "/auth/login" },
-  { label: "", page: "/auth/login" },
+  { label: "Sair", page: "/auth/login" },
 ];
 
 export default function Header() {
@@ -28,6 +28,7 @@ export default function Header() {
 
   useEffect(() => {
     if (!pathname) return;
+    console.log("🚀 ~ Header ~ pathname:", pathname);
 
     let filteredMenu: MenuItem[] = [];
 
@@ -41,6 +42,10 @@ export default function Header() {
           item.label === "Home" ||
           item.label === "Cadastrar clientes" ||
           item.label === "Meus clientes"
+      );
+    } else {
+      filteredMenu = menuItems.filter(
+        (item) => item.label != "Login" && item.label != "Cadastrar"
       );
     }
 
@@ -60,7 +65,7 @@ export default function Header() {
 
       {mounted && menuList.length > 0 && (
         <>
-          <nav className="hidden md:flex items-center gap-6">
+          <nav className="hidden md:flex items-center gap-8">
             {menuList.map((item) => (
               <a
                 key={item.label}

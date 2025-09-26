@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import Link from "next/link";
 import Image from "next/image";
 import { Eye, EyeOff } from "lucide-react";
+import { useRouter } from "next/router";
 
 const schema = yup.object().shape({
   email: yup
@@ -28,6 +29,8 @@ type FormData = yup.InferType<typeof schema>;
 
 export default function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
+
+  const router = useRouter();
 
   const {
     register,
@@ -129,6 +132,7 @@ export default function LoginForm() {
           <Button
             type="submit"
             className="w-full bg-[#529FF6] font-bold hover:bg-blue-700 text-white py-4 sm:py-5 text-base lg:text-sm md:text-[14px] sm:text-[13px] rounded-[8px]"
+            onClick={() => router.replace("/dashboard")}
           >
             Entrar
           </Button>
