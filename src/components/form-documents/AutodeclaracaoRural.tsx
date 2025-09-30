@@ -10,6 +10,7 @@ import { Checkbox } from "../ui/checkbox";
 import Util from "@/utils/Util";
 import TableEditable from "../TableEditable";
 import { Plus } from "lucide-react";
+import { useCallback, useState } from "react";
 
 const ruralSelfDeclarationSchema = yup.object({
   // Section 1: Dados do segurado
@@ -85,6 +86,17 @@ type RuralSelfDeclarationFormData = yup.InferType<
 type RuralSelfDeclarationResolver = Resolver<RuralSelfDeclarationFormData>;
 
 export default function AutodeclaracaoRural() {
+  const [tablesData, setTablesData] = useState<{ [key: string]: string[][] }>(
+    {}
+  );
+
+  const handleTableChange = useCallback(
+    ({ name, values }: { name: string; values: string[][] }) => {
+      setTablesData((prev) => ({ ...prev, [name]: values }));
+    },
+    []
+  );
+
   const {
     register,
     handleSubmit,
@@ -465,7 +477,20 @@ export default function AutodeclaracaoRural() {
                     2. Período(s) de atividade rural (dia/mês/ano)
                   </p>
 
-                  <TableEditable />
+                  <TableEditable
+                    name="ruralPeriod"
+                    colums={[
+                      { label: "Período (DD/MM/AAAA a DD/MM/AAAA)" },
+                      { label: "CONDIÇÃO EM RELAÇÃO AO IMÓVEL" },
+                      {
+                        label: "Situação",
+                        type: "checkbox",
+                        options: ["Individual", "Regime de economia familiar"],
+                      },
+                    ]}
+                    onChange={handleTableChange}
+                    lineInitial={3}
+                  />
                   <p className=" font-[300] text-[16px]  text-[#5F5F5F]  ">
                     * Proprietário / Possuidor / Comodatário / Arrendatário /
                     Parceiro / Meeiro / Usufrutuário / Condômino / Posseiro
@@ -655,7 +680,17 @@ export default function AutodeclaracaoRural() {
                     assentado, usufrutuário e houve cessão da terra, informar:
                   </p>
 
-                  <TableEditable />
+                  <TableEditable
+                    name="landCession"
+                    colums={[
+                      { label: "Tipo de cessão*" },
+                      { label: "Período (DD/MM/AAAA a DD/MM/AAAA)" },
+                      { label: "Nome do cessionário" },
+                      { label: "CPF do cessionário" },
+                    ]}
+                    onChange={handleTableChange}
+                    lineInitial={3}
+                  />
                   <p className=" font-[300] text-[16px]  text-[#5F5F5F]  ">
                     *Exemplos: Arrendamento, parceria, meação, comodato, etc.
                   </p>
@@ -809,7 +844,19 @@ export default function AutodeclaracaoRural() {
                     (milho, feijão, porcos, etc.)
                   </p>
 
-                  <TableEditable />
+                  <TableEditable
+                    name="ruralExploration"
+                    colums={[
+                      { label: "Atividade" },
+                      {
+                        label: "Subsistência/venda",
+                        type: "select",
+                        options: ["Teste 1", "Teste 2"],
+                      },
+                    ]}
+                    onChange={handleTableChange}
+                    lineInitial={3}
+                  />
                 </div>
 
                 <div className="space-y-2">
@@ -846,7 +893,16 @@ export default function AutodeclaracaoRural() {
                       Não
                     </Label>
                   </div>
-                  <TableEditable />
+                  <TableEditable
+                    name="ipiTaxDetails"
+                    colums={[
+                      { label: "Produto" },
+                      { label: "Valor do IPI" },
+                      { label: "Período" },
+                    ]}
+                    onChange={handleTableChange}
+                    lineInitial={3}
+                  />
                   {errors.hasIpiTax && (
                     <p className="text-red-500 text-sm">
                       {errors.hasIpiTax.message}
@@ -887,7 +943,17 @@ export default function AutodeclaracaoRural() {
                       Não
                     </Label>
                   </div>
-                  <TableEditable />
+                  <TableEditable
+                    name="employeesDetails"
+                    colums={[
+                      { label: "Nome" },
+                      { label: "CPF" },
+                      { label: "Função" },
+                      { label: "Período" },
+                    ]}
+                    onChange={handleTableChange}
+                    lineInitial={3}
+                  />
                   {errors.hasEmployees && (
                     <p className="text-red-500 text-sm">
                       {errors.hasEmployees.message}
@@ -929,7 +995,16 @@ export default function AutodeclaracaoRural() {
                       Não
                     </Label>
                   </div>
-                  <TableEditable />
+                  <TableEditable
+                    name="otherActivitiesIncome"
+                    colums={[
+                      { label: "Atividade" },
+                      { label: "Renda Mensal" },
+                      { label: "Período" },
+                    ]}
+                    onChange={handleTableChange}
+                    lineInitial={3}
+                  />
                   {errors.hasOtherActivityOrIncome && (
                     <p className="text-red-500 text-sm">
                       {errors.hasOtherActivityOrIncome.message}
@@ -972,7 +1047,16 @@ export default function AutodeclaracaoRural() {
                       Não
                     </Label>
                   </div>
-                  <TableEditable />
+                  <TableEditable
+                    name="specificIncomeSources"
+                    colums={[
+                      { label: "Tipo de Atividade" },
+                      { label: "Renda Mensal" },
+                      { label: "Período" },
+                    ]}
+                    onChange={handleTableChange}
+                    lineInitial={3}
+                  />
                   {errors.hasSpecificIncomeSources && (
                     <p className="text-red-500 text-sm">
                       {errors.hasSpecificIncomeSources.message}
@@ -1012,7 +1096,16 @@ export default function AutodeclaracaoRural() {
                       Não
                     </Label>
                   </div>
-                  <TableEditable />
+                  <TableEditable
+                    name="cooperativeDetails"
+                    colums={[
+                      { label: "Nome da Cooperativa" },
+                      { label: "CNPJ" },
+                      { label: "Tipo de Participação" },
+                    ]}
+                    onChange={handleTableChange}
+                    lineInitial={3}
+                  />
                   {errors.isCooperativeMember && (
                     <p className="text-red-500 text-sm">
                       {errors.isCooperativeMember.message}

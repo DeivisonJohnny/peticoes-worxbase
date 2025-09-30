@@ -28,7 +28,6 @@ export default function Header() {
 
   useEffect(() => {
     if (!pathname) return;
-    console.log("🚀 ~ Header ~ pathname:", pathname);
 
     let filteredMenu: MenuItem[] = [];
 

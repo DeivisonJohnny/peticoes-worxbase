@@ -8,6 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Divider } from "antd";
 import { ArrowRight, CircleCheckBig, LucideProps, Play } from "lucide-react";
 import styled from "styled-components";
+import LoasDeficiencia from "@/components/form-documents/LoasDeficiencia";
+import LoasIdoso from "@/components/form-documents/LoasIdoso";
 
 interface classNameStatusProps {
   div: string;
@@ -25,6 +27,38 @@ interface listFormsProps {
 }
 
 const listForms: listFormsProps[] = [
+  {
+    idForm: "loas-idoso",
+    label: "Loas Idoso",
+    completed: "preenchido",
+    icon: CircleCheckBig,
+    form: <LoasIdoso />,
+    propsIcon: {
+      color: "#F5F5F5",
+      fill: "#00B215",
+      size: 24,
+    },
+    classNameStatus: {
+      div: " bg-[#00B2151A] rounded-[50px] h-fit px-[10px] py-[2px]  hover:bg-[#77ff874f] ",
+      text: " text-[#00B215] text-[14px] font-[500] cursor-pointer",
+    },
+  },
+  {
+    idForm: "loas-deficiencia",
+    label: "Loas Deficiência",
+    completed: "preenchido",
+    icon: CircleCheckBig,
+    form: <LoasDeficiencia />,
+    propsIcon: {
+      color: "#F5F5F5",
+      fill: "#00B215",
+      size: 24,
+    },
+    classNameStatus: {
+      div: " bg-[#00B2151A] rounded-[50px] h-fit px-[10px] py-[2px]  hover:bg-[#77ff874f] ",
+      text: " text-[#00B215] text-[14px] font-[500] cursor-pointer",
+    },
+  },
   {
     idForm: "procuracao-inss",
     label: "Procuração INSS",
@@ -132,7 +166,7 @@ export default function Documents() {
   };
 
   return (
-    <main className=" max-w-[1200px] w-full mx-auto pb-[100px] ">
+    <main className=" max-w-[1200px] w-full mx-auto pb-[100px] px-5 ">
       <div className="text-[#9A9A9A] font-light text-[14px] px-0  py-6  ">
         Cadastro de clientes &gt; Documentos
       </div>
