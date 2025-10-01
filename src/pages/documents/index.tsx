@@ -10,6 +10,7 @@ import { ArrowRight, CircleCheckBig, LucideProps, Play } from "lucide-react";
 import styled from "styled-components";
 import LoasDeficiencia from "@/components/form-documents/LoasDeficiencia";
 import LoasIdoso from "@/components/form-documents/LoasIdoso";
+import AuxilioDoenca from "@/components/form-documents/AuxilioDoenca";
 
 interface classNameStatusProps {
   div: string;
@@ -27,6 +28,22 @@ interface listFormsProps {
 }
 
 const listForms: listFormsProps[] = [
+  {
+    idForm: "auxilio-doenca",
+    label: "Auxilio Doença",
+    completed: "preenchido",
+    icon: CircleCheckBig,
+    form: <AuxilioDoenca />,
+    propsIcon: {
+      color: "#F5F5F5",
+      fill: "#00B215",
+      size: 24,
+    },
+    classNameStatus: {
+      div: " bg-[#00B2151A] rounded-[50px] h-fit px-[10px] py-[2px]  hover:bg-[#77ff874f] ",
+      text: " text-[#00B215] text-[14px] font-[500] cursor-pointer",
+    },
+  },
   {
     idForm: "loas-idoso",
     label: "Loas Idoso",
