@@ -11,6 +11,7 @@ import styled from "styled-components";
 import LoasDeficiencia from "@/components/form-documents/LoasDeficiencia";
 import LoasIdoso from "@/components/form-documents/LoasIdoso";
 import AuxilioDoenca from "@/components/form-documents/AuxilioDoenca";
+import ProcuracaoPPP from "@/components/form-documents/ProcuracaoPPP";
 
 interface classNameStatusProps {
   div: string;
@@ -28,6 +29,22 @@ interface listFormsProps {
 }
 
 const listForms: listFormsProps[] = [
+  {
+    idForm: "procuracao-ppp",
+    label: "Procuração - PPP",
+    completed: "preenchido",
+    icon: CircleCheckBig,
+    form: <ProcuracaoPPP />,
+    propsIcon: {
+      color: "#F5F5F5",
+      fill: "#00B215",
+      size: 24,
+    },
+    classNameStatus: {
+      div: " bg-[#00B2151A] rounded-[50px] h-fit px-[10px] py-[2px]  hover:bg-[#77ff874f] ",
+      text: " text-[#00B215] text-[14px] font-[500] cursor-pointer",
+    },
+  },
   {
     idForm: "auxilio-doenca",
     label: "Auxilio Doença",
