@@ -13,6 +13,7 @@ import LoasIdoso from "@/components/form-documents/LoasIdoso";
 import AuxilioDoenca from "@/components/form-documents/AuxilioDoenca";
 import ProcuracaoPPP from "@/components/form-documents/ProcuracaoPPP";
 import ProcuracaoDeclaracaoJudicial from "@/components/form-documents/ProcuracaoDeclaracaoJudicial";
+import ContratoHonorarios from "@/components/form-documents/ContratoHonorarios";
 
 interface classNameStatusProps {
   div: string;
@@ -30,6 +31,22 @@ interface listFormsProps {
 }
 
 const listForms: listFormsProps[] = [
+  {
+    idForm: "contrato-honorarios",
+    label: "Contrato de Honorarios",
+    completed: "preenchido",
+    icon: CircleCheckBig,
+    form: <ContratoHonorarios />,
+    propsIcon: {
+      color: "#F5F5F5",
+      fill: "#00B215",
+      size: 24,
+    },
+    classNameStatus: {
+      div: " bg-[#00B2151A] rounded-[50px] h-fit px-[10px] py-[2px]  hover:bg-[#77ff874f] ",
+      text: " text-[#00B215] text-[14px] font-[500] cursor-pointer",
+    },
+  },
   {
     idForm: "procuracao-declaracao-judicial",
     label: "Procuração e Declaracão Judicias",
