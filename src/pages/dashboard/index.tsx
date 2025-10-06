@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardHeader } from "@/components/ui/card";
@@ -21,15 +21,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useRouter } from "next/router";
-
-const clients = [
-  "Nome do cliente",
-  "Nome do cliente",
-  "Nome do cliente",
-  "Nome do cliente",
-  "Nome do cliente",
-  "Nome do cliente",
-];
+import Api from "@/api";
+import SpinLoader from "@/components/SpinLoader";
 
 const documentTypes = [
   { id: "procuracao-inss", label: "Procuração INSS", checked: true },
@@ -83,10 +76,35 @@ const petitionModels = [
   },
 ];
 
+export type ClientType = {
+  id: string;
+  name: string;
+  cpf?: string | null;
+  cnpj?: string | null;
+  address?: string | null;
+  phone?: string | null;
+  dateOfBirth?: string | Date | null;
+  rg?: string | null;
+  maritalStatus?: string | null;
+  birthPlace?: string | null;
+  rgIssuer?: string | null;
+  nickname?: string | null;
+  nationality?: string | null;
+  motherName?: string | null;
+  occupation?: string | null;
+  email?: string | null;
+  isActive: boolean;
+  createdAt: string | Date;
+  updatedAt: string | Date;
+  documents: object[];
+};
+
 export default function Dashboard() {
-  const [selectedClient, setSelectedClient] = useState("Nome do cliente");
+  const [selectedClient, setSelectedClient] = useState<ClientType>();
   const [documents, setDocuments] = useState(documentTypes);
   const [petitions, setPetitions] = useState(petitionModels);
+  const [isLoading, setIsLoading] = useState(true);
+  const [clients, setClients] = useState<ClientType[]>([]);
 
   const router = useRouter();
 
@@ -103,9 +121,31 @@ export default function Dashboard() {
       )
     );
   };
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const { data } = await Api.get("/clients");
+        setClients(data);
+      } catch (error) {
+        console.error("Erro capturado no componente:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <SpinLoader />
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen p-2 w-[100%] ">
+    <div className="min-h-[calc(100vh_-_70px)] p-2 w-[100%] ">
       <div className=" max-w-[1440px] w-full mx-auto">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 w-full">
           <Card className="p-6 border-none shadow-none gap-5 ">
@@ -126,7 +166,7 @@ export default function Dashboard() {
               <Button
                 variant="outline"
                 size="sm"
-                className="text-[#13529C] bg-[#F3F3F3] border-none "
+                className="text-[#13529C] bg-[#F3F3F3] border-none cursor-pointer "
               >
                 <Filter className="w-4 h-4 mr-1" />
                 Filtrar por
@@ -137,57 +177,65 @@ export default function Dashboard() {
                 Adicionar novo cliente <Plus width={25} height={25} />
               </Button>
 
-              {clients.map((client, index) => (
-                <div
-                  key={index}
-                  className="flex items-center justify-between py-2 px-3 hover:bg-gray-50  cursor-pointer border-[#CCCCCC] border-1 rounded-[8px] shadow-[0px_2px_4px_#0000001A] "
-                  onClick={() => setSelectedClient(client)}
-                >
-                  <span className="text-[16px] text-[#1C3552] ">{client}</span>
-                  <div className="flex items-center gap-2">
-                    <span
-                      className=" text-[#13529C] bg-[#529FF626] px-2 py-[0px] text-[14px] rounded-[50px] font-medium flex flex-row items-center flex-nowrap gap-[10px] cursor-pointer "
-                      onClick={() => router.push("/documents")}
-                    >
-                      Gerar documento
-                      <ArrowRight width={12} />
+              <div className=" flex flex-col w-full gap-2 h-[300px] overflow-y-scroll scroll-list-clients  ">
+                {clients.map((client, index) => (
+                  <Button
+                    key={index}
+                    className={` flex items-center justify-between py-2 px-3 hover:bg-gray-50  cursor-pointer bg-white  border-1 rounded-[8px] shadow-[0px_2px_4px_#0000001A] min-h-[42px]  ${
+                      selectedClient?.id === client.id
+                        ? "border-[royalblue] shadow-[#4169e183]"
+                        : "border-[#CCCCCC]"
+                    }  `}
+                    onClick={() => setSelectedClient(client)}
+                  >
+                    <span className="text-[16px] text-[#1C3552] ">
+                      {client.name}
                     </span>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger>
-                        <EllipsisVertical className="w-4 h-4 text-blue-600" />
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent
-                        side="bottom"
-                        align="end"
-                        className=" rounded-[12px] rounded-tr-none"
+                    <div className="flex items-center gap-2">
+                      <span
+                        className=" text-[#13529C] bg-[#529FF626] px-2 py-[0px] text-[14px] rounded-[50px] font-medium flex flex-row items-center flex-nowrap gap-[10px] cursor-pointer "
+                        onClick={() => router.push("/documents")}
                       >
-                        <DropdownMenuItem className=" text-[#1C3552] text-[14px] ">
-                          Editar dados
-                        </DropdownMenuItem>
-                        <Divider className="p-0 m-0" style={{ margin: 0 }} />
-                        <DropdownMenuItem
-                          className=" text-[#1C3552] text-[14px] "
-                          onClick={() =>
-                            router.push(`/history/${"asdakshdkahdkja"}`)
-                          }
+                        Gerar documento
+                        <ArrowRight width={12} />
+                      </span>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger className="cursor-pointer">
+                          <EllipsisVertical className="w-4 h-4 text-blue-600 " />
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent
+                          side="bottom"
+                          align="end"
+                          className=" rounded-[12px] rounded-tr-none"
                         >
-                          Ver histórico
-                        </DropdownMenuItem>
-                        <Divider className="p-0 m-0" style={{ margin: 0 }} />
-                        <DropdownMenuItem className=" text-[#1C3552] text-[14px] ">
-                          Excluir cliente
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
-                </div>
-              ))}
+                          <DropdownMenuItem className=" text-[#1C3552] text-[14px] cursor-pointer ">
+                            Editar dados
+                          </DropdownMenuItem>
+                          <Divider className="p-0 m-0" style={{ margin: 0 }} />
+                          <DropdownMenuItem
+                            className=" text-[#1C3552] text-[14px] cursor-pointer"
+                            onClick={() =>
+                              router.push(`/history/${client?.id}`)
+                            }
+                          >
+                            Ver histórico
+                          </DropdownMenuItem>
+                          <Divider className="p-0 m-0" style={{ margin: 0 }} />
+                          <DropdownMenuItem className=" text-[#1C3552] text-[14px]cursor-pointer ">
+                            Excluir cliente
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
+                  </Button>
+                ))}
+              </div>
             </div>
           </Card>
 
-          <Card className=" border-[#CCCCCC] border-1 rounded-[8px] gap-[10px] p-[15px] py-[10px] ">
+          <Card className=" border-[#CCCCCC] h-fit border-1 rounded-[8px] gap-[10px] p-[15px] py-[10px] ">
             <h2 className="text-[#1C3552] font-medium text-[20px] mb-4">
-              {selectedClient}
+              {selectedClient?.name}
             </h2>
 
             <div className="mb-0">
@@ -200,7 +248,11 @@ export default function Dashboard() {
                     CPF/CNPJ:
                   </label>
                   <div className="text-[16px] font-normal text-gray-700">
-                    XXXXXXXXXXXXX
+                    {selectedClient?.cpf
+                      ? selectedClient?.cpf
+                      : selectedClient?.cnpj
+                      ? selectedClient?.cnpj
+                      : "XXXXXXXXXXXXX"}
                   </div>
                 </div>
                 <div className="  flex flex-row flex-nowrap items-center gap-[5px] ">
@@ -208,7 +260,7 @@ export default function Dashboard() {
                     E-mail:
                   </label>
                   <div className="text-[16px] font-normal text-gray-700">
-                    XXXXXXXXXXXXX
+                    {selectedClient?.email ?? "XXXXXXXXXXXXX"}
                   </div>
                 </div>
                 <div className="  flex flex-row flex-nowrap items-center gap-[5px] ">
@@ -216,7 +268,7 @@ export default function Dashboard() {
                     Endereço:
                   </label>
                   <div className="text-[16px] font-normal text-gray-700">
-                    XXXXXXXXXXXXX
+                    {selectedClient?.address ?? "XXXXXXXXXXXXX"}
                   </div>
                 </div>
                 <div className="  flex flex-row flex-nowrap items-center gap-[5px] ">
@@ -224,7 +276,7 @@ export default function Dashboard() {
                     Telefone:
                   </label>
                   <div className="text-[16px] font-normal text-gray-700">
-                    XXXXXXXXXXXXX
+                    {selectedClient?.phone ?? "XXXXXXXXXXXXX"}
                   </div>
                 </div>
               </div>

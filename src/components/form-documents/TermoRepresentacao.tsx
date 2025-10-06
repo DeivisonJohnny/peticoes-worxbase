@@ -1,6 +1,6 @@
 "use client";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Resolver, useForm } from "react-hook-form";
+import { Controller, Resolver, useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import { Label } from "@/components/ui/label";
@@ -9,108 +9,125 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "../ui/checkbox";
 import Util from "@/utils/Util";
 
-const statementSchema = yup.object({
-  fullName: yup
+const termoRepresentacaoSchema = yup.object({
+  representedName: yup
     .string()
     .min(3, "Nome deve ter ao menos 3 caracteres")
     .required("Nome completo é obrigatório"),
-  cpf: yup
+  representedCpf: yup
     .string()
     .required("CPF é obrigatório")
     .test("cpf-valid", "CPF inválido", (value) =>
       Util.validateCpfOrCnpj(value || "")
     ),
-  rg: yup
+  representedRg: yup
     .string()
     .min(5, "RG deve ter ao menos 5 caracteres")
     .required("RG é obrigatório"),
+  representedAddress: yup
+    .string()
+    .min(5, "Endereço deve ter ao menos 5 caracteres")
+    .required("Endereço é obrigatório"),
+  representedCity: yup
+    .string()
+    .min(3, "Município deve ter ao menos 3 caracteres")
+    .required("Município é obrigatório"),
+  representedCep: yup
+    .string()
+    .required("CEP é obrigatório")
+    .matches(/^\d{5}-?\d{3}$/, "CEP deve estar no formato 00000-000"),
 
-  receivesRetirementPension: yup.string().required("Esta opção é obrigatória"),
-  benefitType: yup.string().when("receivesRetirementPension", {
-    is: "sim",
-    then: (schema) => schema.required("Tipo de benefício é obrigatório"),
-    otherwise: (schema) => schema.notRequired(),
-  }),
-  relationshipWithProvider: yup.string().when("benefitType", {
-    is: "pensao",
-    then: (schema) => schema.required("Relação com instituidor é obrigatória"),
-    otherwise: (schema) => schema.notRequired(),
-  }),
-  originatingEntity: yup.string().when("receivesRetirementPension", {
-    is: "sim",
-    then: (schema) => schema.required("Ente de origem é obrigatório"),
-    otherwise: (schema) => schema.notRequired(),
-  }),
-  serverType: yup.string().when("receivesRetirementPension", {
-    is: "sim",
-    then: (schema) => schema.required("Tipo de servidor é obrigatório"),
-    otherwise: (schema) => schema.notRequired(),
-  }),
+  attorneyName: yup
+    .string()
+    .min(3, "Nome do advogado deve ter ao menos 3 caracteres")
+    .required("Nome do advogado é obrigatório"),
+  attorneyCpf: yup
+    .string()
+    .required("CPF do advogado é obrigatório")
+    .test("cpf-valid", "CPF do advogado inválido", (value) =>
+      Util.validateCpfOrCnpj(value || "")
+    ),
+  attorneyOab: yup.string().required("OAB é obrigatória"),
+  attorneyNit: yup.string().required("NIT é obrigatório"),
 
-  benefitStartDate: yup.string().when("receivesRetirementPension", {
-    is: "sim",
-    then: (schema) => schema.required("Data de início é obrigatória"),
-    otherwise: (schema) => schema.notRequired(),
-  }),
-  benefitAgencyName: yup.string().when("receivesRetirementPension", {
-    is: "sim",
-    then: (schema) =>
-      schema
-        .min(3, "Nome do órgão deve ter ao menos 3 caracteres")
-        .required("Órgão é obrigatório"),
-    otherwise: (schema) => schema.notRequired(),
-  }),
-  lastGrossSalary: yup.string().when("receivesRetirementPension", {
-    is: "sim",
-    then: (schema) => schema.required("Última remuneração é obrigatória"),
-    otherwise: (schema) => schema.notRequired(),
-  }),
-  monthYearSalary: yup.string().when("receivesRetirementPension", {
-    is: "sim",
-    then: (schema) => schema.required("Mês/ano é obrigatório"),
-    otherwise: (schema) => schema.notRequired(),
-  }),
+  retirementAge: yup.boolean().default(false),
+  retirementAgeUrban: yup.boolean().default(false),
+  retirementAgeRural: yup.boolean().default(false),
+  retirementContributionTime: yup.boolean().default(false),
+  retirementSpecial: yup.boolean().default(false),
+  pensionDeath: yup.boolean().default(false),
+  pensionDeathUrban: yup.boolean().default(false),
+  pensionDeathRural: yup.boolean().default(false),
+  reclusionAid: yup.boolean().default(false),
+  reclusionAidUrban: yup.boolean().default(false),
+  reclusionAidRural: yup.boolean().default(false),
+  maternityPay: yup.boolean().default(false),
+  maternityPayUrban: yup.boolean().default(false),
+  maternityPayRural: yup.boolean().default(false),
+  cadastralUpdate: yup.boolean().default(false),
 
   location: yup.string().required("Local é obrigatório"),
-  statementDate: yup.string().required("Data da declaração é obrigatória"),
+  documentDate: yup.string().required("Data do documento é obrigatória"),
 });
 
-type StatementFormData = yup.InferType<typeof statementSchema>;
-type StatementResolver = Resolver<StatementFormData>;
+type TermoRepresentacaoFormData = yup.InferType<
+  typeof termoRepresentacaoSchema
+>;
+type TermoRepresentacaoResolver = Resolver<TermoRepresentacaoFormData>;
 
-export default function TermoRepresentacao() {
+export default function TermoRepresentacaoForm() {
   const {
     register,
     handleSubmit,
     setValue,
+    control,
     formState: { errors },
-  } = useForm<StatementFormData>({
-    resolver: yupResolver(statementSchema) as StatementResolver,
+  } = useForm<TermoRepresentacaoFormData>({
+    resolver: yupResolver(
+      termoRepresentacaoSchema
+    ) as TermoRepresentacaoResolver,
     mode: "onChange",
+    defaultValues: {
+      representedName: "",
+      representedCpf: "",
+      representedRg: "",
+      representedAddress: "",
+      representedCity: "",
+      representedCep: "",
+      attorneyName: "",
+      attorneyCpf: "",
+      attorneyOab: "",
+      attorneyNit: "",
+      retirementAge: false,
+      retirementAgeUrban: false,
+      retirementAgeRural: false,
+      retirementContributionTime: false,
+      retirementSpecial: false,
+      pensionDeath: false,
+      pensionDeathUrban: false,
+      pensionDeathRural: false,
+      reclusionAid: false,
+      reclusionAidUrban: false,
+      reclusionAidRural: false,
+      maternityPay: false,
+      maternityPayUrban: false,
+      maternityPayRural: false,
+      cadastralUpdate: false,
+      location: "",
+      documentDate: "",
+    },
   });
 
-  const onSubmit = (data: StatementFormData) => {
+  const onSubmit = (data: TermoRepresentacaoFormData) => {
     console.log(data);
   };
 
-  const handleCpfChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleCpfChange = (
+    e: React.ChangeEvent<HTMLInputElement>,
+    fieldName: "representedCpf" | "attorneyCpf"
+  ) => {
     const formattedCpf = Util.formatCpfCnpj(e.target.value);
-    setValue("cpf", formattedCpf, { shouldValidate: true });
-  };
-
-  const handleSalaryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const rawValue = e.target.value.replace(/\D/g, "");
-    if (!rawValue) {
-      setValue("lastGrossSalary", "", { shouldValidate: true });
-      return;
-    }
-
-    const numberValue = parseFloat(rawValue) / 100;
-    const formattedValue = new Intl.NumberFormat("pt-BR", {
-      minimumFractionDigits: 2,
-    }).format(numberValue);
-
-    setValue("lastGrossSalary", formattedValue, { shouldValidate: true });
+    setValue(fieldName, formattedCpf, { shouldValidate: true });
   };
 
   return (
@@ -118,7 +135,7 @@ export default function TermoRepresentacao() {
       <div className=" max-w-[1200px] w-full mx-auto">
         <Card className="p-0 border-none shadow-none gap-4 ">
           <CardHeader className="text-[#529FF6] font-[700] text-[24px] px-0">
-            Termo de representação
+            Termo de Representação
           </CardHeader>
 
           <CardContent className="px-0">
@@ -129,407 +146,575 @@ export default function TermoRepresentacao() {
               <div className="space-y-2 flex flex-col gap-[20px] ">
                 <div className="space-y-2">
                   <p className=" text-[#1C3552] text-[18px] font-[600] ">
-                    Dados do outorgante (segurado/dependente)
+                    Dados do Representado(a)
                   </p>
                   <Label
-                    htmlFor="fullName"
-                    className="text-[16px] md:text-[15]  text-[#1C3552] font-[400] "
+                    htmlFor="representedName"
+                    className="text-[16px] md:text-[15]  text-[#1C3552] font-[400] cursor-pointer  "
                   >
                     Nome completo
                   </Label>
                   <Input
-                    id="fullName"
+                    id="representedName"
                     type="text"
-                    {...register("fullName")}
+                    {...register("representedName")}
                     className={`rounded-[8px] w-full h-[35px] px-[18px]  text-[15] placeholder:text-[#CCCCCC] placeholder:italic ${
-                      errors.fullName ? "border-red-500" : ""
+                      errors.representedName ? "border-red-500" : ""
                     }`}
                     placeholder="Digite aqui..."
                   />
-                  {errors.fullName && (
+                  {errors.representedName && (
                     <p className="text-red-500 text-sm">
-                      {errors.fullName.message}
+                      {errors.representedName.message}
                     </p>
                   )}
                 </div>
-                <div className="space-y-2">
-                  <Label
-                    htmlFor="cpf"
-                    className="text-[16px] md:text-[15]  text-[#1C3552] font-[400] "
-                  >
-                    CPF
-                  </Label>
-                  <Input
-                    id="cpf"
-                    type="text"
-                    {...register("cpf")}
-                    onChange={handleCpfChange}
-                    className={`rounded-[8px] w-full h-[35px] px-[18px]  text-[15] placeholder:text-[#CCCCCC] placeholder:italic ${
-                      errors.cpf ? "border-red-500" : ""
-                    }`}
-                    placeholder="000.000.000-00"
-                  />
-                  {errors.cpf && (
-                    <p className="text-red-500 text-sm">{errors.cpf.message}</p>
-                  )}
+                <div className="flex flex-col md:flex-row gap-[15px]">
+                  <div className="space-y-2 w-full">
+                    <Label
+                      htmlFor="representedCpf"
+                      className="text-[16px] md:text-[15]  text-[#1C3552] font-[400] cursor-pointer "
+                    >
+                      CPF
+                    </Label>
+                    <Input
+                      id="representedCpf"
+                      type="text"
+                      {...register("representedCpf")}
+                      onChange={(e) => handleCpfChange(e, "representedCpf")}
+                      className={`rounded-[8px] w-full h-[35px] px-[18px]  text-[15] placeholder:text-[#CCCCCC] placeholder:italic ${
+                        errors.representedCpf ? "border-red-500" : ""
+                      }`}
+                      placeholder="000.000.000-00"
+                    />
+                    {errors.representedCpf && (
+                      <p className="text-red-500 text-sm">
+                        {errors.representedCpf.message}
+                      </p>
+                    )}
+                  </div>
+                  <div className="space-y-2 w-full">
+                    <Label
+                      htmlFor="representedRg"
+                      className="text-[16px] md:text-[15]  text-[#1C3552] font-[400] cursor-pointer "
+                    >
+                      RG
+                    </Label>
+                    <Input
+                      id="representedRg"
+                      type="text"
+                      {...register("representedRg")}
+                      className={`rounded-[8px] w-full h-[35px] px-[18px]  text-[15] placeholder:text-[#CCCCCC] placeholder:italic ${
+                        errors.representedRg ? "border-red-500" : ""
+                      }`}
+                      placeholder="Digite aqui..."
+                    />
+                    {errors.representedRg && (
+                      <p className="text-red-500 text-sm">
+                        {errors.representedRg.message}
+                      </p>
+                    )}
+                  </div>
                 </div>
                 <div className="space-y-2">
                   <Label
-                    htmlFor="rg"
-                    className="text-[16px] md:text-[15]  text-[#1C3552] font-[400] "
+                    htmlFor="representedAddress"
+                    className="text-[16px] md:text-[15]  text-[#1C3552] font-[400] cursor-pointer "
                   >
-                    RG
+                    Residente e domiciliado(a) em
                   </Label>
                   <Input
-                    id="rg"
+                    id="representedAddress"
                     type="text"
-                    {...register("rg")}
+                    {...register("representedAddress")}
                     className={`rounded-[8px] w-full h-[35px] px-[18px]  text-[15] placeholder:text-[#CCCCCC] placeholder:italic ${
-                      errors.rg ? "border-red-500" : ""
+                      errors.representedAddress ? "border-red-500" : ""
+                    }`}
+                    placeholder="Ex: Rua, Avenida, etc."
+                  />
+                  {errors.representedAddress && (
+                    <p className="text-red-500 text-sm">
+                      {errors.representedAddress.message}
+                    </p>
+                  )}
+                </div>
+                <div className="flex flex-col md:flex-row gap-[15px]">
+                  <div className="space-y-2 w-full">
+                    <Label
+                      htmlFor="representedCity"
+                      className="text-[16px] md:text-[15]  text-[#1C3552] font-[400] cursor-pointer "
+                    >
+                      Município
+                    </Label>
+                    <Input
+                      id="representedCity"
+                      type="text"
+                      {...register("representedCity")}
+                      className={`rounded-[8px] w-full h-[35px] px-[18px]  text-[15] placeholder:text-[#CCCCCC] placeholder:italic ${
+                        errors.representedCity ? "border-red-500" : ""
+                      }`}
+                      placeholder="Digite aqui..."
+                    />
+                    {errors.representedCity && (
+                      <p className="text-red-500 text-sm">
+                        {errors.representedCity.message}
+                      </p>
+                    )}
+                  </div>
+                  <div className="space-y-2 w-full">
+                    <Label
+                      htmlFor="representedCep"
+                      className="text-[16px] md:text-[15]  text-[#1C3552] font-[400] cursor-pointer "
+                    >
+                      CEP
+                    </Label>
+                    <Input
+                      id="representedCep"
+                      type="text"
+                      {...register("representedCep")}
+                      className={`rounded-[8px] w-full h-[35px] px-[18px]  text-[15] placeholder:text-[#CCCCCC] placeholder:italic ${
+                        errors.representedCep ? "border-red-500" : ""
+                      }`}
+                      placeholder="00000-000"
+                    />
+                    {errors.representedCep && (
+                      <p className="text-red-500 text-sm">
+                        {errors.representedCep.message}
+                      </p>
+                    )}
+                  </div>
+                </div>
+                <div className="space-y-2 pt-4">
+                  <p className=" text-[#1C3552] text-[18px] font-[600] ">
+                    Dados do Advogado(a)
+                  </p>
+                  <Label
+                    htmlFor="attorneyName"
+                    className="text-[16px] md:text-[15]  text-[#1C3552] font-[400] cursor-pointer "
+                  >
+                    Nome do Advogado(a)
+                  </Label>
+                  <Input
+                    id="attorneyName"
+                    type="text"
+                    {...register("attorneyName")}
+                    className={`rounded-[8px] w-full h-[35px] px-[18px]  text-[15] placeholder:text-[#CCCCCC] placeholder:italic ${
+                      errors.attorneyName ? "border-red-500" : ""
                     }`}
                     placeholder="Digite aqui..."
                   />
-                  {errors.rg && (
-                    <p className="text-red-500 text-sm">{errors.rg.message}</p>
+                  {errors.attorneyName && (
+                    <p className="text-red-500 text-sm">
+                      {errors.attorneyName.message}
+                    </p>
                   )}
                 </div>
+                <div className="flex flex-col md:flex-row gap-[15px]">
+                  <div className="space-y-2 w-full">
+                    <Label
+                      htmlFor="attorneyCpf"
+                      className="text-[16px] md:text-[15]  text-[#1C3552] font-[400] cursor-pointer "
+                    >
+                      CPF do Advogado(a)
+                    </Label>
+                    <Input
+                      id="attorneyCpf"
+                      type="text"
+                      {...register("attorneyCpf")}
+                      onChange={(e) => handleCpfChange(e, "attorneyCpf")}
+                      className={`rounded-[8px] w-full h-[35px] px-[18px]  text-[15] placeholder:text-[#CCCCCC] placeholder:italic ${
+                        errors.attorneyCpf ? "border-red-500" : ""
+                      }`}
+                      placeholder="000.000.000-00"
+                    />
+                    {errors.attorneyCpf && (
+                      <p className="text-red-500 text-sm">
+                        {errors.attorneyCpf.message}
+                      </p>
+                    )}
+                  </div>
+                  <div className="space-y-2 w-full">
+                    <Label
+                      htmlFor="attorneyOab"
+                      className="text-[16px] md:text-[15]  text-[#1C3552] font-[400] cursor-pointer "
+                    >
+                      OAB Nº
+                    </Label>
+                    <Input
+                      id="attorneyOab"
+                      type="text"
+                      {...register("attorneyOab")}
+                      className={`rounded-[8px] w-full h-[35px] px-[18px]  text-[15] placeholder:text-[#CCCCCC] placeholder:italic ${
+                        errors.attorneyOab ? "border-red-500" : ""
+                      }`}
+                      placeholder="Digite aqui..."
+                    />
+                    {errors.attorneyOab && (
+                      <p className="text-red-500 text-sm">
+                        {errors.attorneyOab.message}
+                      </p>
+                    )}
+                  </div>
+                  <div className="space-y-2 w-full">
+                    <Label
+                      htmlFor="attorneyNit"
+                      className="text-[16px] md:text-[15]  text-[#1C3552] font-[400] cursor-pointer "
+                    >
+                      NIT Nº
+                    </Label>
+                    <Input
+                      id="attorneyNit"
+                      type="text"
+                      {...register("attorneyNit")}
+                      className={`rounded-[8px] w-full h-[35px] px-[18px]  text-[15] placeholder:text-[#CCCCCC] placeholder:italic ${
+                        errors.attorneyNit ? "border-red-500" : ""
+                      }`}
+                      placeholder="Digite aqui..."
+                    />
+                    {errors.attorneyNit && (
+                      <p className="text-red-500 text-sm">
+                        {errors.attorneyNit.message}
+                      </p>
+                    )}
+                  </div>
+                </div>
 
-                <div className="space-y-2">
-                  <p className="text-[16px] md:text-[15]  text-[#1C3552] font-[400] ">
-                    Você recebe aposentadoria/pensão de outro regime de
-                    previdência?
+                <div className="space-y-4 pt-4">
+                  <p className=" text-[#1C3552] text-[18px] font-[600] ">
+                    Serviço ou Benefício Solicitado
                   </p>
-                  <div className=" flex flex-row items-center gap-2 ">
-                    <Checkbox
-                      {...register("receivesRetirementPension")}
-                      value="sim"
-                      className=" border-1 border-[#A7A7A7] rounded-[0px] "
-                      id="receivesRetirementPensionYes"
-                    />
-                    <Label
-                      htmlFor="receivesRetirementPensionYes"
-                      className="text-[14px]   text-[#1C3552] font-[300] "
-                    >
-                      Sim
-                    </Label>
-                  </div>
 
-                  <div className=" flex flex-row items-center gap-2 ">
-                    <Checkbox
-                      {...register("receivesRetirementPension")}
-                      value="nao"
-                      className=" border-1 border-[#A7A7A7] rounded-[0px] "
-                      id="receivesRetirementPensionNo"
-                    />
-                    <Label
-                      htmlFor="receivesRetirementPensionNo"
-                      className="text-[14px]   text-[#1C3552] font-[300] "
-                    >
-                      Não
-                    </Label>
-                  </div>
-                  {errors.receivesRetirementPension && (
-                    <p className="text-red-500 text-sm">
-                      {errors.receivesRetirementPension.message}
-                    </p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <p className="text-[16px] md:text-[15]  text-[#1C3552] font-[400] ">
-                    Caso receba aposentadoria ou pensão de outro regime de
-                    previdência, deverá declarar:
-                  </p>
-                  <p className="text-[14px] md:text-[15]  text-[#9A9A9A] font-[400]">
-                    Tipo do benefício:
-                  </p>
-                  <div className=" flex flex-row items-center gap-2 ">
-                    <Checkbox
-                      {...register("benefitType")}
-                      value="pensao"
-                      className=" border-1 border-[#A7A7A7] rounded-[0px] "
-                      id="typePension"
-                    />
-                    <Label
-                      htmlFor="typePension"
-                      className="text-[14px]   text-[#1C3552] font-[300] "
-                    >
-                      Pensão
-                    </Label>
-                  </div>
-
-                  <div className=" flex flex-row items-center gap-2 ">
-                    <Checkbox
-                      {...register("benefitType")}
-                      value="aposentadoria"
-                      className=" border-1 border-[#A7A7A7] rounded-[0px] "
-                      id="typeRetirement"
-                    />
-                    <Label
-                      htmlFor="typeRetirement"
-                      className="text-[14px]   text-[#1C3552] font-[300] "
-                    >
-                      Aposentadoria
-                    </Label>
-                  </div>
-                  {errors.benefitType && (
-                    <p className="text-red-500 text-sm">
-                      {errors.benefitType.message}
-                    </p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <p className="text-[16px] md:text-[15]  text-[#1C3552] font-[400] ">
-                    Caso opção seja Pensão, informar se a relação com o
-                    instituidor era como cônjuge ou companheiro (a).
-                  </p>
-                  <div className=" flex flex-row items-center gap-2 ">
-                    <Checkbox
-                      {...register("relationshipWithProvider")}
-                      value="conjuge"
-                      className=" border-1 border-[#A7A7A7] rounded-[0px] "
-                      id="relationSpouse"
-                    />
-                    <Label
-                      htmlFor="relationSpouse"
-                      className="text-[14px]   text-[#1C3552] font-[300] "
-                    >
-                      Cônjuge
-                    </Label>
-                  </div>
-
-                  <div className=" flex flex-row items-center gap-2 ">
-                    <Checkbox
-                      {...register("relationshipWithProvider")}
-                      value="companheiro"
-                      className=" border-1 border-[#A7A7A7] rounded-[0px] "
-                      id="relationPartner"
-                    />
-                    <Label
-                      htmlFor="relationPartner"
-                      className="text-[14px]   text-[#1C3552] font-[300] "
-                    >
-                      Companheiro (a)
-                    </Label>
-                  </div>
-                  {errors.relationshipWithProvider && (
-                    <p className="text-red-500 text-sm">
-                      {errors.relationshipWithProvider.message}
-                    </p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <p className="text-[16px] md:text-[15]  text-[#1C3552] font-[400] ">
-                    Ente de origem:
-                  </p>
-                  <div className=" flex flex-row items-center gap-2 ">
-                    <Checkbox
-                      {...register("originatingEntity")}
-                      value="estadual"
-                      className=" border-1 border-[#A7A7A7] rounded-[0px] "
-                      id="entityState"
-                    />
-                    <Label
-                      htmlFor="entityState"
-                      className="text-[14px]   text-[#1C3552] font-[300] "
-                    >
-                      Estadual
-                    </Label>
-                  </div>
-
-                  <div className=" flex flex-row items-center gap-2 ">
-                    <Checkbox
-                      {...register("originatingEntity")}
-                      value="municipal"
-                      className=" border-1 border-[#A7A7A7] rounded-[0px] "
-                      id="entityMunicipal"
-                    />
-                    <Label
-                      htmlFor="entityMunicipal"
-                      className="text-[14px]   text-[#1C3552] font-[300] "
-                    >
-                      Municipal
-                    </Label>
-                  </div>
-                  <div className=" flex flex-row items-center gap-2 ">
-                    <Checkbox
-                      {...register("originatingEntity")}
-                      value="federal"
-                      className=" border-1 border-[#A7A7A7] rounded-[0px] "
-                      id="entityFederal"
-                    />
-                    <Label
-                      htmlFor="entityFederal"
-                      className="text-[14px]   text-[#1C3552] font-[300] "
-                    >
-                      Federal
-                    </Label>
-                  </div>
-                  {errors.originatingEntity && (
-                    <p className="text-red-500 text-sm">
-                      {errors.originatingEntity.message}
-                    </p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <p className="text-[16px] md:text-[15]  text-[#1C3552] font-[400] ">
-                    Tipo de servidor:
-                  </p>
-                  <div className=" flex flex-row items-center gap-2 ">
-                    <Checkbox
-                      {...register("serverType")}
-                      value="civil"
-                      className=" border-1 border-[#A7A7A7] rounded-[0px] "
-                      id="serverCivil"
-                    />
-                    <Label
-                      htmlFor="serverCivil"
-                      className="text-[14px]   text-[#1C3552] font-[300] "
-                    >
-                      Civil
-                    </Label>
-                  </div>
-
-                  <div className=" flex flex-row items-center gap-2 ">
-                    <Checkbox
-                      {...register("serverType")}
-                      value="militar"
-                      className=" border-1 border-[#A7A7A7] rounded-[0px] "
-                      id="serverMilitary"
-                    />
-                    <Label
-                      htmlFor="serverMilitary"
-                      className="text-[14px]   text-[#1C3552] font-[300] "
-                    >
-                      Militar
-                    </Label>
-                  </div>
-                  {errors.serverType && (
-                    <p className="text-red-500 text-sm">
-                      {errors.serverType.message}
-                    </p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <Label
-                    htmlFor="benefitStartDate"
-                    className="text-[16px] md:text-[15]  text-[#1C3552] font-[400] "
-                  >
-                    Data de início do benefício no outro regime:
-                  </Label>
-                  <Input
-                    id="benefitStartDate"
-                    type="date"
-                    {...register("benefitStartDate")}
-                    className={`rounded-[8px] w-fit h-[35px] px-[18px]  text-[15px] text-[#CCCCCC]  placeholder:text-[#CCCCCC] placeholder:italic ${
-                      errors.benefitStartDate ? "border-red-500" : ""
-                    }`}
-                    placeholder="Digite aqui..."
-                  />
-                  {errors.benefitStartDate && (
-                    <p className="text-red-500 text-sm">
-                      {errors.benefitStartDate.message}
-                    </p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <Label
-                    htmlFor="benefitAgencyName"
-                    className="text-[16px] md:text-[15]  text-[#1C3552] font-[400] "
-                  >
-                    Nome do órgão da pensão/aposentadoria:
-                  </Label>
-                  <Input
-                    id="benefitAgencyName"
-                    type="text"
-                    {...register("benefitAgencyName")}
-                    className={`rounded-[8px] w-full h-[35px] px-[18px]  text-[15] placeholder:text-[#CCCCCC] placeholder:italic ${
-                      errors.benefitAgencyName ? "border-red-500" : ""
-                    }`}
-                    placeholder="Digite aqui..."
-                  />
-                  {errors.benefitAgencyName && (
-                    <p className="text-red-500 text-sm">
-                      {errors.benefitAgencyName.message}
-                    </p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <div className="  flex flex-row gap-[15px] ">
-                    <div className=" flex flex-col gap-[5px] ">
-                      <Label className="text-[16px] md:text-[15]  text-[#1C3552] font-[400] ">
-                        Última remuneração bruta:
-                      </Label>
-                      <div className="flex items-center rounded-md border px-3">
-                        <span className="text-[16px]  mr-2 text-[#1C3552] italic   ">
-                          R$
-                        </span>
-                        <Input
-                          type="text"
-                          {...register("lastGrossSalary")}
-                          onChange={handleSalaryChange}
-                          className={`rounded-[8px] w-full p-[16px] pl-0   text-[16px] placeholder:text-[#CCCCCC] placeholder:italic placeholder:font-[300] border-0 focus-visible:ring-0 focus-visible:ring-offset-0 ${
-                            errors.lastGrossSalary ? "border-red-500" : ""
-                          }`}
-                          placeholder="0,00"
+                  <div className="flex items-center gap-2">
+                    <Controller
+                      name="retirementAge"
+                      control={control}
+                      render={({ field }) => (
+                        <Checkbox
+                          className="cursor-pointer"
+                          id="retirementAge"
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
                         />
-                      </div>
-                      {errors.lastGrossSalary && (
-                        <p className="text-red-500 text-sm">
-                          {errors.lastGrossSalary.message}
-                        </p>
                       )}
-                    </div>
-
-                    <div className=" flex flex-col gap-[5px] ">
-                      <Label
-                        htmlFor="monthYearSalary"
-                        className="text-[16px] md:text-[15]  text-[#1C3552] font-[400] "
-                      >
-                        Mês/ano:
-                      </Label>
-
-                      <Input
-                        id="monthYearSalary"
-                        type="month"
-                        {...register("monthYearSalary")}
-                        className={`rounded-[8px] w-full p-[16px] text-[16px] placeholder:text-[#CCCCCC] text-[#CCCCCC]  placeholder:italic placeholder:font-[300] border ${
-                          errors.monthYearSalary
-                            ? "border-red-500"
-                            : "border-gray-300"
-                        } focus-visible:ring-0 focus-visible:ring-offset-0`}
-                        placeholder="MM/AAAA"
+                    />
+                    <Label
+                      className="w-1/3 text-[14px] text-[#1C3552] font-[400] cursor-pointer"
+                      htmlFor="retirementAge"
+                    >
+                      Aposentadoria por Idade:
+                    </Label>
+                    <div className="flex items-center gap-2">
+                      <Controller
+                        name="retirementAgeUrban"
+                        control={control}
+                        render={({ field }) => (
+                          <Checkbox
+                            className="cursor-pointer"
+                            id="retirementAgeUrban"
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        )}
                       />
-
-                      {errors.monthYearSalary && (
-                        <p className="text-red-500 text-sm">
-                          {errors.monthYearSalary.message}
-                        </p>
-                      )}
+                      <Label
+                        htmlFor="retirementAgeUrban"
+                        className="text-[14px] text-[#1C3552] font-[300] cursor-pointer"
+                      >
+                        Urbana
+                      </Label>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Controller
+                        name="retirementAgeRural"
+                        control={control}
+                        render={({ field }) => (
+                          <Checkbox
+                            className="cursor-pointer"
+                            id="retirementAgeRural"
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        )}
+                      />
+                      <Label
+                        htmlFor="retirementAgeRural"
+                        className="text-[14px] text-[#1C3552] font-[300] cursor-pointer"
+                      >
+                        Rural
+                      </Label>
                     </div>
                   </div>
+
+                  <div className="flex items-center gap-2">
+                    <Controller
+                      name="retirementContributionTime"
+                      control={control}
+                      render={({ field }) => (
+                        <Checkbox
+                          className="cursor-pointer"
+                          id="retirementContributionTime"
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      )}
+                    />
+                    <Label
+                      htmlFor="retirementContributionTime"
+                      className="text-[14px] text-[#1C3552] font-[300] cursor-pointer"
+                    >
+                      Aposentadoria por Tempo de Contribuição
+                    </Label>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <Controller
+                      name="retirementSpecial"
+                      control={control}
+                      render={({ field }) => (
+                        <Checkbox
+                          className="cursor-pointer"
+                          id="retirementSpecial"
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      )}
+                    />
+                    <Label
+                      htmlFor="retirementSpecial"
+                      className="text-[14px] text-[#1C3552] font-[300] cursor-pointer"
+                    >
+                      Aposentadoria Especial
+                    </Label>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <Controller
+                      name="pensionDeath"
+                      control={control}
+                      render={({ field }) => (
+                        <Checkbox
+                          className="cursor-pointer"
+                          id="pensionDeath"
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      )}
+                    />
+                    <Label
+                      className="w-1/3 text-[14px] text-[#1C3552] font-[400] cursor-pointer"
+                      htmlFor="pensionDeath"
+                    >
+                      Pensão por Morte Previdenciária:
+                    </Label>
+                    <div className="flex items-center gap-2">
+                      <Controller
+                        name="pensionDeathUrban"
+                        control={control}
+                        render={({ field }) => (
+                          <Checkbox
+                            className="cursor-pointer"
+                            id="pensionDeathUrban"
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        )}
+                      />
+                      <Label
+                        htmlFor="pensionDeathUrban"
+                        className="text-[14px] text-[#1C3552] font-[300] cursor-pointer"
+                      >
+                        Urbana
+                      </Label>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Controller
+                        name="pensionDeathRural"
+                        control={control}
+                        render={({ field }) => (
+                          <Checkbox
+                            className="cursor-pointer"
+                            id="pensionDeathRural"
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        )}
+                      />
+                      <Label
+                        htmlFor="pensionDeathRural"
+                        className="text-[14px] text-[#1C3552] font-[300] cursor-pointer"
+                      >
+                        Rural
+                      </Label>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <Controller
+                      name="reclusionAid"
+                      control={control}
+                      render={({ field }) => (
+                        <Checkbox
+                          className="cursor-pointer"
+                          id="reclusionAid"
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      )}
+                    />
+                    <Label
+                      className="w-1/3 text-[14px] text-[#1C3552] font-[400] cursor-pointer"
+                      htmlFor="reclusionAid"
+                    >
+                      Auxílio-Reclusão:
+                    </Label>
+                    <div className="flex items-center gap-2">
+                      <Controller
+                        name="reclusionAidUrban"
+                        control={control}
+                        render={({ field }) => (
+                          <Checkbox
+                            className="cursor-pointer"
+                            id="reclusionAidUrban"
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        )}
+                      />
+                      <Label
+                        htmlFor="reclusionAidUrban"
+                        className="text-[14px] text-[#1C3552] font-[300] cursor-pointer"
+                      >
+                        Urbano
+                      </Label>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Controller
+                        name="reclusionAidRural"
+                        control={control}
+                        render={({ field }) => (
+                          <Checkbox
+                            className="cursor-pointer"
+                            id="reclusionAidRural"
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        )}
+                      />
+                      <Label
+                        htmlFor="reclusionAidRural"
+                        className="text-[14px] text-[#1C3552] font-[300] cursor-pointer"
+                      >
+                        Rural
+                      </Label>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <Controller
+                      name="maternityPay"
+                      control={control}
+                      render={({ field }) => (
+                        <Checkbox
+                          className="cursor-pointer"
+                          id="maternityPay"
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      )}
+                    />
+                    <Label
+                      className="w-1/3 text-[14px] text-[#1C3552] font-[400] cursor-pointer"
+                      htmlFor="maternityPay"
+                    >
+                      Salário Maternidade:
+                    </Label>
+                    <div className="flex items-center gap-2">
+                      <Controller
+                        name="maternityPayUrban"
+                        control={control}
+                        render={({ field }) => (
+                          <Checkbox
+                            className="cursor-pointer"
+                            id="maternityPayUrban"
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        )}
+                      />
+                      <Label
+                        htmlFor="maternityPayUrban"
+                        className="text-[14px] text-[#1C3552] font-[300] cursor-pointer"
+                      >
+                        Urbano
+                      </Label>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Controller
+                        name="maternityPayRural"
+                        control={control}
+                        render={({ field }) => (
+                          <Checkbox
+                            className="cursor-pointer"
+                            id="maternityPayRural"
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        )}
+                      />
+                      <Label
+                        htmlFor="maternityPayRural"
+                        className="text-[14px] text-[#1C3552] font-[300] cursor-pointer"
+                      >
+                        Rural
+                      </Label>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <Controller
+                      name="cadastralUpdate"
+                      control={control}
+                      render={({ field }) => (
+                        <Checkbox
+                          className="cursor-pointer"
+                          id="cadastralUpdate"
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      )}
+                    />
+                    <Label
+                      htmlFor="cadastralUpdate"
+                      className="text-[14px] text-[#1C3552] font-[300] cursor-pointer"
+                    >
+                      Atualização cadastral
+                    </Label>
+                  </div>
+
+                  {errors.root && (
+                    <p className="text-red-500 text-sm">
+                      {errors.root.message}
+                    </p>
+                  )}
                 </div>
 
-                <div className="space-y-2">
-                  <div className="  flex flex-row gap-[15px] ">
-                    <div className=" flex flex-col gap-[5px] w-[40%] ">
-                      <Label className="text-[16px] md:text-[15]  text-[#1C3552] font-[400] ">
+                <div className="space-y-2 pt-4">
+                  <div className="flex flex-col md:flex-row gap-[15px] ">
+                    <div className=" flex flex-col gap-[5px] w-full md:w-[60%] ">
+                      <Label
+                        className="text-[16px] md:text-[15]  text-[#1C3552] font-[400] cursor-pointer "
+                        htmlFor="location"
+                      >
                         Local:
                       </Label>
                       <Input
                         id="location"
                         type="text"
                         {...register("location")}
-                        className={`rounded-[0px] w-full h-[35px] px-[18px]  text-[15] placeholder:text-[#CCCCCC] shadow-none placeholder:italic border-0 border-b-1 ${
+                        className={`rounded-[8px] w-full h-[35px] px-[18px]  text-[15] placeholder:text-[#CCCCCC] placeholder:italic ${
                           errors.location ? "border-red-500" : ""
                         }`}
-                        placeholder="Digite aqui..."
+                        placeholder="Cidade"
                       />
                       {errors.location && (
                         <p className="text-red-500 text-sm">
@@ -538,27 +723,24 @@ export default function TermoRepresentacao() {
                       )}
                     </div>
 
-                    <div className=" flex flex-col gap-[5px] w-[20%] ">
+                    <div className=" flex flex-col gap-[5px] w-full md:w-[40%] ">
                       <Label
-                        htmlFor="statementDate"
-                        className="text-[16px] md:text-[15]  text-[#1C3552] font-[400] "
+                        htmlFor="documentDate"
+                        className="text-[16px] md:text-[15]  text-[#1C3552] font-[400] cursor-pointer "
                       >
                         Data
                       </Label>
-
                       <Input
-                        id="statementDate"
+                        id="documentDate"
                         type="date"
-                        {...register("statementDate")}
-                        className={`rounded-[0px] w-fit h-[35px] px-[18px]  text-[15px] text-[#CCCCCC]  placeholder:text-[#CCCCCC] shadow-none  border-0 border-b-1 placeholder:italic ${
-                          errors.statementDate ? "border-red-500" : ""
+                        {...register("documentDate")}
+                        className={`rounded-[8px] w-full h-[35px] px-[18px] text-[15px] text-[#1C3552] placeholder:text-[#CCCCCC] placeholder:italic ${
+                          errors.documentDate ? "border-red-500" : ""
                         }`}
-                        placeholder="Digite aqui..."
                       />
-
-                      {errors.statementDate && (
+                      {errors.documentDate && (
                         <p className="text-red-500 text-sm">
-                          {errors.statementDate.message}
+                          {errors.documentDate.message}
                         </p>
                       )}
                     </div>

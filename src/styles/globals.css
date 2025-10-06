@@ -136,3 +136,42 @@ body {
     @apply bg-background text-foreground;
   }
 }
+
+.scroll-list-clients {
+  overflow-y: auto;
+  padding-right: 8px;
+}
+
+.scroll-list-clients::-webkit-scrollbar {
+  width: 4px;
+  background-color: transparent;
+}
+
+.scroll-list-clients::-webkit-scrollbar-thumb {
+  background-color: royalblue;
+  border-radius: 10px;
+}
+
+.toast {
+  color: white;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  border-radius: 0.75rem;
+  gap: 15px !important;
+}
+
+.success {
+  border: 1px solid #16a34a !important;
+}
+
+.error {
+  border: 1px solid #dc2626 !important;
+}
+
+.warning {
+  border: 1px solid #eab308 !important;
+  color: black;
+}
+
+.info {
+  border: 1px solid #2563eb !important;
+}

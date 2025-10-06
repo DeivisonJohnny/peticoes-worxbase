@@ -38,7 +38,7 @@ export default function TableEditable({
   colums,
   onChange,
 }: TableEditableProps) {
-  const [col, setCol] = useState<TableEditableColumnsType[]>(colums);
+  const [col] = useState<TableEditableColumnsType[]>(colums);
   const [countLines, setCountLines] = useState(lineInitial);
 
   const [values, setValues] = useState<string[][]>(

@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "../ui/checkbox";
 import Util from "@/utils/Util";
+import { useEffect } from "react";
 
 const statementSchema = yup.object({
   fullName: yup
@@ -29,28 +30,31 @@ const statementSchema = yup.object({
   benefitType: yup.string().when("receivesRetirementPension", {
     is: "sim",
     then: (schema) => schema.required("Tipo de benefício é obrigatório"),
-    otherwise: (schema) => schema.notRequired(),
+    otherwise: (schema) => schema.notRequired().nullable(),
   }),
   relationshipWithProvider: yup.string().when("benefitType", {
     is: "pensao",
     then: (schema) => schema.required("Relação com instituidor é obrigatória"),
-    otherwise: (schema) => schema.notRequired(),
+    otherwise: (schema) => schema.notRequired().nullable(),
   }),
-  originatingEntity: yup.string().when("receivesRetirementPension", {
+  originatingEntity: yup.array(yup.string()).when("receivesRetirementPension", {
     is: "sim",
-    then: (schema) => schema.required("Ente de origem é obrigatório"),
-    otherwise: (schema) => schema.notRequired(),
+    then: (schema) =>
+      schema
+        .min(1, "Selecione ao menos um ente de origem")
+        .required("Ente de origem é obrigatório"),
+    otherwise: (schema) => schema.notRequired().nullable(),
   }),
   serverType: yup.string().when("receivesRetirementPension", {
     is: "sim",
     then: (schema) => schema.required("Tipo de servidor é obrigatório"),
-    otherwise: (schema) => schema.notRequired(),
+    otherwise: (schema) => schema.notRequired().nullable(),
   }),
 
   benefitStartDate: yup.string().when("receivesRetirementPension", {
     is: "sim",
     then: (schema) => schema.required("Data de início é obrigatória"),
-    otherwise: (schema) => schema.notRequired(),
+    otherwise: (schema) => schema.notRequired().nullable(),
   }),
   benefitAgencyName: yup.string().when("receivesRetirementPension", {
     is: "sim",
@@ -58,17 +62,17 @@ const statementSchema = yup.object({
       schema
         .min(3, "Nome do órgão deve ter ao menos 3 caracteres")
         .required("Órgão é obrigatório"),
-    otherwise: (schema) => schema.notRequired(),
+    otherwise: (schema) => schema.notRequired().nullable(),
   }),
   lastGrossSalary: yup.string().when("receivesRetirementPension", {
     is: "sim",
     then: (schema) => schema.required("Última remuneração é obrigatória"),
-    otherwise: (schema) => schema.notRequired(),
+    otherwise: (schema) => schema.notRequired().nullable(),
   }),
   monthYearSalary: yup.string().when("receivesRetirementPension", {
     is: "sim",
     then: (schema) => schema.required("Mês/ano é obrigatório"),
-    otherwise: (schema) => schema.notRequired(),
+    otherwise: (schema) => schema.notRequired().nullable(),
   }),
 
   location: yup.string().required("Local é obrigatório"),
@@ -83,11 +87,44 @@ export default function DeclaracaoNaoRecebimentoForm() {
     register,
     handleSubmit,
     setValue,
+    watch,
+    getValues,
+    resetField,
     formState: { errors },
   } = useForm<StatementFormData>({
     resolver: yupResolver(statementSchema) as StatementResolver,
     mode: "onChange",
+    defaultValues: {
+      originatingEntity: [],
+    },
   });
+
+  const receivesRetirementPension = watch("receivesRetirementPension");
+  const benefitType = watch("benefitType");
+  const originatingEntity = watch("originatingEntity") || [];
+
+  useEffect(() => {
+    if (receivesRetirementPension === "nao") {
+      const fieldsToReset: (keyof StatementFormData)[] = [
+        "benefitType",
+        "relationshipWithProvider",
+        "originatingEntity",
+        "serverType",
+        "benefitStartDate",
+        "benefitAgencyName",
+        "lastGrossSalary",
+        "monthYearSalary",
+      ];
+      fieldsToReset.forEach((field) => resetField(field));
+      setValue("originatingEntity", []);
+    }
+  }, [receivesRetirementPension, resetField, setValue]);
+
+  useEffect(() => {
+    if (benefitType !== "pensao") {
+      resetField("relationshipWithProvider");
+    }
+  }, [benefitType, resetField]);
 
   const onSubmit = (data: StatementFormData) => {
     console.log(data);
@@ -104,13 +141,19 @@ export default function DeclaracaoNaoRecebimentoForm() {
       setValue("lastGrossSalary", "", { shouldValidate: true });
       return;
     }
-
     const numberValue = parseFloat(rawValue) / 100;
     const formattedValue = new Intl.NumberFormat("pt-BR", {
       minimumFractionDigits: 2,
     }).format(numberValue);
-
     setValue("lastGrossSalary", formattedValue, { shouldValidate: true });
+  };
+
+  const handleMultiCheckboxChange = (value: string) => {
+    const currentValues = getValues("originatingEntity") || [];
+    const newValues = currentValues.includes(value)
+      ? currentValues.filter((item) => item !== value)
+      : [...currentValues, value];
+    setValue("originatingEntity", newValues, { shouldValidate: true });
   };
 
   return (
@@ -201,10 +244,14 @@ export default function DeclaracaoNaoRecebimentoForm() {
                   </p>
                   <div className=" flex flex-row items-center gap-2 ">
                     <Checkbox
-                      {...register("receivesRetirementPension")}
-                      value="sim"
-                      className=" border-1 border-[#A7A7A7] rounded-[0px] "
                       id="receivesRetirementPensionYes"
+                      checked={receivesRetirementPension === "sim"}
+                      onCheckedChange={() =>
+                        setValue("receivesRetirementPension", "sim", {
+                          shouldValidate: true,
+                        })
+                      }
+                      className=" border-1 border-[#A7A7A7] rounded-[0px] "
                     />
                     <Label
                       htmlFor="receivesRetirementPensionYes"
@@ -213,13 +260,16 @@ export default function DeclaracaoNaoRecebimentoForm() {
                       Sim
                     </Label>
                   </div>
-
                   <div className=" flex flex-row items-center gap-2 ">
                     <Checkbox
-                      {...register("receivesRetirementPension")}
-                      value="nao"
-                      className=" border-1 border-[#A7A7A7] rounded-[0px] "
                       id="receivesRetirementPensionNo"
+                      checked={receivesRetirementPension === "nao"}
+                      onCheckedChange={() =>
+                        setValue("receivesRetirementPension", "nao", {
+                          shouldValidate: true,
+                        })
+                      }
+                      className=" border-1 border-[#A7A7A7] rounded-[0px] "
                     />
                     <Label
                       htmlFor="receivesRetirementPensionNo"
@@ -235,299 +285,334 @@ export default function DeclaracaoNaoRecebimentoForm() {
                   )}
                 </div>
 
-                <div className="space-y-2">
-                  <p className="text-[16px] md:text-[15]  text-[#1C3552] font-[400] ">
-                    Caso receba aposentadoria ou pensão de outro regime de
-                    previdência, deverá declarar:
-                  </p>
-                  <p className="text-[14px] md:text-[15]  text-[#9A9A9A] font-[400]">
-                    Tipo do benefício:
-                  </p>
-                  <div className=" flex flex-row items-center gap-2 ">
-                    <Checkbox
-                      {...register("benefitType")}
-                      value="pensao"
-                      className=" border-1 border-[#A7A7A7] rounded-[0px] "
-                      id="typePension"
-                    />
-                    <Label
-                      htmlFor="typePension"
-                      className="text-[14px]   text-[#1C3552] font-[300] "
-                    >
-                      Pensão
-                    </Label>
-                  </div>
-
-                  <div className=" flex flex-row items-center gap-2 ">
-                    <Checkbox
-                      {...register("benefitType")}
-                      value="aposentadoria"
-                      className=" border-1 border-[#A7A7A7] rounded-[0px] "
-                      id="typeRetirement"
-                    />
-                    <Label
-                      htmlFor="typeRetirement"
-                      className="text-[14px]   text-[#1C3552] font-[300] "
-                    >
-                      Aposentadoria
-                    </Label>
-                  </div>
-                  {errors.benefitType && (
-                    <p className="text-red-500 text-sm">
-                      {errors.benefitType.message}
-                    </p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <p className="text-[16px] md:text-[15]  text-[#1C3552] font-[400] ">
-                    Caso opção seja Pensão, informar se a relação com o
-                    instituidor era como cônjuge ou companheiro (a).
-                  </p>
-                  <div className=" flex flex-row items-center gap-2 ">
-                    <Checkbox
-                      {...register("relationshipWithProvider")}
-                      value="conjuge"
-                      className=" border-1 border-[#A7A7A7] rounded-[0px] "
-                      id="relationSpouse"
-                    />
-                    <Label
-                      htmlFor="relationSpouse"
-                      className="text-[14px]   text-[#1C3552] font-[300] "
-                    >
-                      Cônjuge
-                    </Label>
-                  </div>
-
-                  <div className=" flex flex-row items-center gap-2 ">
-                    <Checkbox
-                      {...register("relationshipWithProvider")}
-                      value="companheiro"
-                      className=" border-1 border-[#A7A7A7] rounded-[0px] "
-                      id="relationPartner"
-                    />
-                    <Label
-                      htmlFor="relationPartner"
-                      className="text-[14px]   text-[#1C3552] font-[300] "
-                    >
-                      Companheiro (a)
-                    </Label>
-                  </div>
-                  {errors.relationshipWithProvider && (
-                    <p className="text-red-500 text-sm">
-                      {errors.relationshipWithProvider.message}
-                    </p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <p className="text-[16px] md:text-[15]  text-[#1C3552] font-[400] ">
-                    Ente de origem:
-                  </p>
-                  <div className=" flex flex-row items-center gap-2 ">
-                    <Checkbox
-                      {...register("originatingEntity")}
-                      value="estadual"
-                      className=" border-1 border-[#A7A7A7] rounded-[0px] "
-                      id="entityState"
-                    />
-                    <Label
-                      htmlFor="entityState"
-                      className="text-[14px]   text-[#1C3552] font-[300] "
-                    >
-                      Estadual
-                    </Label>
-                  </div>
-
-                  <div className=" flex flex-row items-center gap-2 ">
-                    <Checkbox
-                      {...register("originatingEntity")}
-                      value="municipal"
-                      className=" border-1 border-[#A7A7A7] rounded-[0px] "
-                      id="entityMunicipal"
-                    />
-                    <Label
-                      htmlFor="entityMunicipal"
-                      className="text-[14px]   text-[#1C3552] font-[300] "
-                    >
-                      Municipal
-                    </Label>
-                  </div>
-                  <div className=" flex flex-row items-center gap-2 ">
-                    <Checkbox
-                      {...register("originatingEntity")}
-                      value="federal"
-                      className=" border-1 border-[#A7A7A7] rounded-[0px] "
-                      id="entityFederal"
-                    />
-                    <Label
-                      htmlFor="entityFederal"
-                      className="text-[14px]   text-[#1C3552] font-[300] "
-                    >
-                      Federal
-                    </Label>
-                  </div>
-                  {errors.originatingEntity && (
-                    <p className="text-red-500 text-sm">
-                      {errors.originatingEntity.message}
-                    </p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <p className="text-[16px] md:text-[15]  text-[#1C3552] font-[400] ">
-                    Tipo de servidor:
-                  </p>
-                  <div className=" flex flex-row items-center gap-2 ">
-                    <Checkbox
-                      {...register("serverType")}
-                      value="civil"
-                      className=" border-1 border-[#A7A7A7] rounded-[0px] "
-                      id="serverCivil"
-                    />
-                    <Label
-                      htmlFor="serverCivil"
-                      className="text-[14px]   text-[#1C3552] font-[300] "
-                    >
-                      Civil
-                    </Label>
-                  </div>
-
-                  <div className=" flex flex-row items-center gap-2 ">
-                    <Checkbox
-                      {...register("serverType")}
-                      value="militar"
-                      className=" border-1 border-[#A7A7A7] rounded-[0px] "
-                      id="serverMilitary"
-                    />
-                    <Label
-                      htmlFor="serverMilitary"
-                      className="text-[14px]   text-[#1C3552] font-[300] "
-                    >
-                      Militar
-                    </Label>
-                  </div>
-                  {errors.serverType && (
-                    <p className="text-red-500 text-sm">
-                      {errors.serverType.message}
-                    </p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <Label
-                    htmlFor="benefitStartDate"
-                    className="text-[16px] md:text-[15]  text-[#1C3552] font-[400] "
-                  >
-                    Data de início do benefício no outro regime:
-                  </Label>
-                  <Input
-                    id="benefitStartDate"
-                    type="date"
-                    {...register("benefitStartDate")}
-                    className={`rounded-[8px] w-fit h-[35px] px-[18px]  text-[15px] text-[#CCCCCC]  placeholder:text-[#CCCCCC] placeholder:italic ${
-                      errors.benefitStartDate ? "border-red-500" : ""
-                    }`}
-                    placeholder="Digite aqui..."
-                  />
-                  {errors.benefitStartDate && (
-                    <p className="text-red-500 text-sm">
-                      {errors.benefitStartDate.message}
-                    </p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <Label
-                    htmlFor="benefitAgencyName"
-                    className="text-[16px] md:text-[15]  text-[#1C3552] font-[400] "
-                  >
-                    Nome do órgão da pensão/aposentadoria:
-                  </Label>
-                  <Input
-                    id="benefitAgencyName"
-                    type="text"
-                    {...register("benefitAgencyName")}
-                    className={`rounded-[8px] w-full h-[35px] px-[18px]  text-[15] placeholder:text-[#CCCCCC] placeholder:italic ${
-                      errors.benefitAgencyName ? "border-red-500" : ""
-                    }`}
-                    placeholder="Digite aqui..."
-                  />
-                  {errors.benefitAgencyName && (
-                    <p className="text-red-500 text-sm">
-                      {errors.benefitAgencyName.message}
-                    </p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <div className="  flex flex-row gap-[15px] ">
-                    <div className=" flex flex-col gap-[5px] ">
-                      <Label className="text-[16px] md:text-[15]  text-[#1C3552] font-[400] ">
-                        Última remuneração bruta:
-                      </Label>
-                      <div className="flex items-center rounded-md border px-3">
-                        <span className="text-[16px]  mr-2 text-[#1C3552] italic   ">
-                          R$
-                        </span>
-                        <Input
-                          type="text"
-                          {...register("lastGrossSalary")}
-                          onChange={handleSalaryChange}
-                          className={`rounded-[8px] w-full p-[16px] pl-0   text-[16px] placeholder:text-[#CCCCCC] placeholder:italic placeholder:font-[300] border-0 focus-visible:ring-0 focus-visible:ring-offset-0 ${
-                            errors.lastGrossSalary ? "border-red-500" : ""
-                          }`}
-                          placeholder="0,00"
+                {receivesRetirementPension === "sim" && (
+                  <>
+                    <div className="space-y-2">
+                      <p className="text-[16px] md:text-[15]  text-[#1C3552] font-[400] ">
+                        Caso receba aposentadoria ou pensão de outro regime de
+                        previdência, deverá declarar:
+                      </p>
+                      <p className="text-[14px] md:text-[15]  text-[#9A9A9A] font-[400]">
+                        Tipo do benefício:
+                      </p>
+                      <div className=" flex flex-row items-center gap-2 ">
+                        <Checkbox
+                          id="typePension"
+                          checked={benefitType === "pensao"}
+                          onCheckedChange={() =>
+                            setValue("benefitType", "pensao", {
+                              shouldValidate: true,
+                            })
+                          }
+                          className=" border-1 border-[#A7A7A7] rounded-[0px] "
                         />
+                        <Label
+                          htmlFor="typePension"
+                          className="text-[14px]   text-[#1C3552] font-[300] "
+                        >
+                          Pensão
+                        </Label>
                       </div>
-                      {errors.lastGrossSalary && (
+                      <div className=" flex flex-row items-center gap-2 ">
+                        <Checkbox
+                          id="typeRetirement"
+                          checked={benefitType === "aposentadoria"}
+                          onCheckedChange={() =>
+                            setValue("benefitType", "aposentadoria", {
+                              shouldValidate: true,
+                            })
+                          }
+                          className=" border-1 border-[#A7A7A7] rounded-[0px] "
+                        />
+                        <Label
+                          htmlFor="typeRetirement"
+                          className="text-[14px]   text-[#1C3552] font-[300] "
+                        >
+                          Aposentadoria
+                        </Label>
+                      </div>
+                      {errors.benefitType && (
                         <p className="text-red-500 text-sm">
-                          {errors.lastGrossSalary.message}
+                          {errors.benefitType.message}
                         </p>
                       )}
                     </div>
 
-                    <div className=" flex flex-col gap-[5px] ">
+                    {benefitType === "pensao" && (
+                      <div className="space-y-2">
+                        <p className="text-[16px] md:text-[15]  text-[#1C3552] font-[400] ">
+                          Caso opção seja Pensão, informar se a relação com o
+                          instituidor era como cônjuge ou companheiro (a).
+                        </p>
+                        <div className=" flex flex-row items-center gap-2 ">
+                          <Checkbox
+                            id="relationSpouse"
+                            checked={
+                              watch("relationshipWithProvider") === "conjuge"
+                            }
+                            onCheckedChange={() =>
+                              setValue("relationshipWithProvider", "conjuge", {
+                                shouldValidate: true,
+                              })
+                            }
+                            className=" border-1 border-[#A7A7A7] rounded-[0px] "
+                          />
+                          <Label
+                            htmlFor="relationSpouse"
+                            className="text-[14px]   text-[#1C3552] font-[300] "
+                          >
+                            Cônjuge
+                          </Label>
+                        </div>
+                        <div className=" flex flex-row items-center gap-2 ">
+                          <Checkbox
+                            id="relationPartner"
+                            checked={
+                              watch("relationshipWithProvider") ===
+                              "companheiro"
+                            }
+                            onCheckedChange={() =>
+                              setValue(
+                                "relationshipWithProvider",
+                                "companheiro",
+                                { shouldValidate: true }
+                              )
+                            }
+                            className=" border-1 border-[#A7A7A7] rounded-[0px] "
+                          />
+                          <Label
+                            htmlFor="relationPartner"
+                            className="text-[14px]   text-[#1C3552] font-[300] "
+                          >
+                            Companheiro (a)
+                          </Label>
+                        </div>
+                        {errors.relationshipWithProvider && (
+                          <p className="text-red-500 text-sm">
+                            {errors.relationshipWithProvider.message}
+                          </p>
+                        )}
+                      </div>
+                    )}
+
+                    <div className="space-y-2">
+                      <p className="text-[16px] md:text-[15]  text-[#1C3552] font-[400] ">
+                        Ente de origem:
+                      </p>
+                      <div className=" flex flex-row items-center gap-2 ">
+                        <Checkbox
+                          id="entityState"
+                          checked={originatingEntity.includes("estadual")}
+                          onCheckedChange={() =>
+                            handleMultiCheckboxChange("estadual")
+                          }
+                          className=" border-1 border-[#A7A7A7] rounded-[0px] "
+                        />
+                        <Label
+                          htmlFor="entityState"
+                          className="text-[14px]   text-[#1C3552] font-[300] "
+                        >
+                          Estadual
+                        </Label>
+                      </div>
+                      <div className=" flex flex-row items-center gap-2 ">
+                        <Checkbox
+                          id="entityMunicipal"
+                          checked={originatingEntity.includes("municipal")}
+                          onCheckedChange={() =>
+                            handleMultiCheckboxChange("municipal")
+                          }
+                          className=" border-1 border-[#A7A7A7] rounded-[0px] "
+                        />
+                        <Label
+                          htmlFor="entityMunicipal"
+                          className="text-[14px]   text-[#1C3552] font-[300] "
+                        >
+                          Municipal
+                        </Label>
+                      </div>
+                      <div className=" flex flex-row items-center gap-2 ">
+                        <Checkbox
+                          id="entityFederal"
+                          checked={originatingEntity.includes("federal")}
+                          onCheckedChange={() =>
+                            handleMultiCheckboxChange("federal")
+                          }
+                          className=" border-1 border-[#A7A7A7] rounded-[0px] "
+                        />
+                        <Label
+                          htmlFor="entityFederal"
+                          className="text-[14px]   text-[#1C3552] font-[300] "
+                        >
+                          Federal
+                        </Label>
+                      </div>
+                      {errors.originatingEntity && (
+                        <p className="text-red-500 text-sm">
+                          {errors.originatingEntity.message}
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="space-y-2">
+                      <p className="text-[16px] md:text-[15]  text-[#1C3552] font-[400] ">
+                        Tipo de servidor:
+                      </p>
+                      <div className=" flex flex-row items-center gap-2 ">
+                        <Checkbox
+                          id="serverCivil"
+                          checked={watch("serverType") === "civil"}
+                          onCheckedChange={() =>
+                            setValue("serverType", "civil", {
+                              shouldValidate: true,
+                            })
+                          }
+                          className=" border-1 border-[#A7A7A7] rounded-[0px] "
+                        />
+                        <Label
+                          htmlFor="serverCivil"
+                          className="text-[14px]   text-[#1C3552] font-[300] "
+                        >
+                          Civil
+                        </Label>
+                      </div>
+                      <div className=" flex flex-row items-center gap-2 ">
+                        <Checkbox
+                          id="serverMilitary"
+                          checked={watch("serverType") === "militar"}
+                          onCheckedChange={() =>
+                            setValue("serverType", "militar", {
+                              shouldValidate: true,
+                            })
+                          }
+                          className=" border-1 border-[#A7A7A7] rounded-[0px] "
+                        />
+                        <Label
+                          htmlFor="serverMilitary"
+                          className="text-[14px]   text-[#1C3552] font-[300] "
+                        >
+                          Militar
+                        </Label>
+                      </div>
+                      {errors.serverType && (
+                        <p className="text-red-500 text-sm">
+                          {errors.serverType.message}
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="space-y-2">
                       <Label
-                        htmlFor="monthYearSalary"
+                        htmlFor="benefitStartDate"
                         className="text-[16px] md:text-[15]  text-[#1C3552] font-[400] "
                       >
-                        Mês/ano:
+                        Data de início do benefício no outro regime:
                       </Label>
-
                       <Input
-                        id="monthYearSalary"
-                        type="month"
-                        {...register("monthYearSalary")}
-                        className={`rounded-[8px] w-full p-[16px] text-[16px] placeholder:text-[#CCCCCC] text-[#CCCCCC]  placeholder:italic placeholder:font-[300] border ${
-                          errors.monthYearSalary
-                            ? "border-red-500"
-                            : "border-gray-300"
-                        } focus-visible:ring-0 focus-visible:ring-offset-0`}
-                        placeholder="MM/AAAA"
+                        id="benefitStartDate"
+                        type="date"
+                        {...register("benefitStartDate")}
+                        className={`rounded-[8px] w-fit h-[35px] px-[18px]  text-[15px] text-[#1C3552] placeholder:text-[#CCCCCC] placeholder:italic ${
+                          errors.benefitStartDate ? "border-red-500" : ""
+                        }`}
                       />
-
-                      {errors.monthYearSalary && (
+                      {errors.benefitStartDate && (
                         <p className="text-red-500 text-sm">
-                          {errors.monthYearSalary.message}
+                          {errors.benefitStartDate.message}
                         </p>
                       )}
                     </div>
-                  </div>
-                </div>
+
+                    <div className="space-y-2">
+                      <Label
+                        htmlFor="benefitAgencyName"
+                        className="text-[16px] md:text-[15]  text-[#1C3552] font-[400] "
+                      >
+                        Nome do órgão da pensão/aposentadoria:
+                      </Label>
+                      <Input
+                        id="benefitAgencyName"
+                        type="text"
+                        {...register("benefitAgencyName")}
+                        className={`rounded-[8px] w-full h-[35px] px-[18px]  text-[15] placeholder:text-[#CCCCCC] placeholder:italic ${
+                          errors.benefitAgencyName ? "border-red-500" : ""
+                        }`}
+                        placeholder="Digite aqui..."
+                      />
+                      {errors.benefitAgencyName && (
+                        <p className="text-red-500 text-sm">
+                          {errors.benefitAgencyName.message}
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="space-y-2">
+                      <div className="flex flex-row gap-[15px]">
+                        <div className="flex flex-col gap-[5px]">
+                          <Label className="text-[16px] md:text-[15] text-[#1C3552] font-[400]">
+                            Última remuneração bruta:
+                          </Label>
+                          <div className="flex items-center rounded-md border px-3">
+                            <span className="text-[16px] mr-2 text-[#1C3552] italic">
+                              R$
+                            </span>
+                            <Input
+                              type="text"
+                              {...register("lastGrossSalary")}
+                              onChange={handleSalaryChange}
+                              className={`rounded-[8px] w-full p-[16px] pl-0 text-[16px] placeholder:text-[#CCCCCC] placeholder:italic placeholder:font-[300] border-0 focus-visible:ring-0 focus-visible:ring-offset-0 ${
+                                errors.lastGrossSalary ? "border-red-500" : ""
+                              }`}
+                              placeholder="0,00"
+                            />
+                          </div>
+                          {errors.lastGrossSalary && (
+                            <p className="text-red-500 text-sm">
+                              {errors.lastGrossSalary.message}
+                            </p>
+                          )}
+                        </div>
+
+                        <div className="flex flex-col gap-[5px]">
+                          <Label
+                            htmlFor="monthYearSalary"
+                            className="text-[16px] md:text-[15] text-[#1C3552] font-[400]"
+                          >
+                            Mês/ano:
+                          </Label>
+                          <Input
+                            id="monthYearSalary"
+                            type="month"
+                            {...register("monthYearSalary")}
+                            className={`rounded-[8px] w-full p-[16px] text-[16px] text-[#1C3552] placeholder:text-[#CCCCCC] placeholder:italic placeholder:font-[300] border ${
+                              errors.monthYearSalary
+                                ? "border-red-500"
+                                : "border-gray-300"
+                            } focus-visible:ring-0 focus-visible:ring-offset-0`}
+                          />
+                          {errors.monthYearSalary && (
+                            <p className="text-red-500 text-sm">
+                              {errors.monthYearSalary.message}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </>
+                )}
 
                 <div className="space-y-2">
-                  <div className="  flex flex-row gap-[15px] ">
-                    <div className=" flex flex-col gap-[5px] w-[40%] ">
-                      <Label className="text-[16px] md:text-[15]  text-[#1C3552] font-[400] ">
+                  <div className="flex flex-row gap-[15px]">
+                    <div className="flex flex-col gap-[5px] w-[40%]">
+                      <Label className="text-[16px] md:text-[15] text-[#1C3552] font-[400]">
                         Local:
                       </Label>
                       <Input
                         id="location"
                         type="text"
                         {...register("location")}
-                        className={`rounded-[0px] w-full h-[35px] px-[18px]  text-[15] placeholder:text-[#CCCCCC] shadow-none placeholder:italic border-0 border-b-1 ${
-                          errors.location ? "border-red-500" : ""
+                        className={`rounded-[0px] w-full h-[35px] px-[18px] text-[15] placeholder:text-[#CCCCCC] shadow-none placeholder:italic border-0 border-b ${
+                          errors.location ? "border-red-500" : "border-gray-300"
                         }`}
                         placeholder="Digite aqui..."
                       />
@@ -538,24 +623,23 @@ export default function DeclaracaoNaoRecebimentoForm() {
                       )}
                     </div>
 
-                    <div className=" flex flex-col gap-[5px] w-[20%] ">
+                    <div className="flex flex-col gap-[5px] w-[30%]">
                       <Label
                         htmlFor="statementDate"
-                        className="text-[16px] md:text-[15]  text-[#1C3552] font-[400] "
+                        className="text-[16px] md:text-[15] text-[#1C3552] font-[400]"
                       >
                         Data
                       </Label>
-
                       <Input
                         id="statementDate"
                         type="date"
                         {...register("statementDate")}
-                        className={`rounded-[0px] w-fit h-[35px] px-[18px]  text-[15px] text-[#CCCCCC]  placeholder:text-[#CCCCCC] shadow-none  border-0 border-b-1 placeholder:italic ${
-                          errors.statementDate ? "border-red-500" : ""
+                        className={`rounded-[0px] w-fit h-[35px] px-[18px] text-[15px] text-[#1C3552] placeholder:text-[#CCCCCC] shadow-none border-0 border-b placeholder:italic ${
+                          errors.statementDate
+                            ? "border-red-500"
+                            : "border-gray-300"
                         }`}
-                        placeholder="Digite aqui..."
                       />
-
                       {errors.statementDate && (
                         <p className="text-red-500 text-sm">
                           {errors.statementDate.message}
@@ -575,7 +659,27 @@ export default function DeclaracaoNaoRecebimentoForm() {
                 </Button>
                 <Button
                   type="button"
-                  className="w-[177px] bg-[#fff]   border-1 border-[#DDB100] font-bold hover:bg-[#DDB000] hover:text-white  text-[#DDB000] py-5 md:py-6 text-[15px] md:text-[15] rounded-[8px]"
+                  onClick={() => {
+                    const defaultVals: Record<
+                      string,
+                      string | string[] | undefined
+                    > = {
+                      fullName: "",
+                      cpf: "",
+                      rg: "",
+                      receivesRetirementPension: undefined,
+                      location: "",
+                      statementDate: "",
+                      originatingEntity: [],
+                    };
+
+                    Object.keys(getValues()).forEach((key) => {
+                      resetField(key as keyof StatementFormData, {
+                        defaultValue: defaultVals[key],
+                      });
+                    });
+                  }}
+                  className="w-[177px] bg-[#fff] border-1 border-[#DDB100] font-bold hover:bg-[#DDB000] hover:text-white text-[#DDB000] py-5 md:py-6 text-[15px] md:text-[15] rounded-[8px]"
                 >
                   Limpar formulário
                 </Button>

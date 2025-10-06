@@ -7,9 +7,8 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import Util from "@/utils/Util";
-import { useCallback, useState } from "react";
-import { Divider } from "antd";
 import { Textarea } from "../ui/textarea";
+import { Divider } from "antd";
 
 const LoasDeficienciaSchema = yup.object({
   jurisdiction: yup.string().required("O foro é obrigatório"),

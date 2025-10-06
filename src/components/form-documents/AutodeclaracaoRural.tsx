@@ -1,6 +1,6 @@
 "use client";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Resolver, useForm } from "react-hook-form";
+import { Controller, Resolver, useForm, useFieldArray } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import { Label } from "@/components/ui/label";
@@ -9,11 +9,10 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "../ui/checkbox";
 import Util from "@/utils/Util";
 import TableEditable from "../TableEditable";
-import { Plus } from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
 import { useCallback, useState } from "react";
 
 const ruralSelfDeclarationSchema = yup.object({
-  // Section 1: Dados do segurado
   fullName: yup
     .string()
     .min(3, "Nome deve ter ao menos 3 caracteres")
@@ -23,13 +22,11 @@ const ruralSelfDeclarationSchema = yup.object({
   birthPlace: yup.string().required("Local de nascimento é obrigatório"),
   address: yup.string().required("Endereço é obrigatório"),
   addressNumber: yup.string().required("Número é obrigatório"),
-  addressComplement: yup.string(),
   addressNeighborhood: yup.string().required("Bairro é obrigatório"),
   addressCity: yup.string().required("Cidade é obrigatória"),
   addressState: yup.string().required("Estado é obrigatório"),
   addressZipCode: yup.string().required("CEP é obrigatório"),
   expirationDate: yup.string().required("Data de expiração é obrigatória"),
-  issuingPlace: yup.string().required("Local de expedição é obrigatório"),
   rg: yup
     .string()
     .min(5, "RG deve ter ao menos 5 caracteres")
@@ -41,43 +38,46 @@ const ruralSelfDeclarationSchema = yup.object({
       Util.validateCpfOrCnpj(value || "")
     ),
 
-  // Section 2.1
   familyEconomyCondition: yup.string().required("Esta opção é obrigatória"),
 
-  // Section 2.2 (Single entry as per UI)
-  familyMemberName: yup.string(),
-  familyMemberBirthCertificate: yup.string(),
-  familyMemberCpf: yup.string(),
-  familyMemberMaritalStatus: yup.string(),
-  familyMemberRelationship: yup.string(),
+  familyMembers: yup.array().of(
+    yup.object().shape({
+      name: yup.string(),
+      birthDate: yup.string(),
+      cpf: yup.string(),
+      maritalStatus: yup.string(),
+      relationship: yup.string(),
+    })
+  ),
 
-  // Section 3 (Single entry as per UI)
-  propertyItrRegistration: yup.string(),
-  propertyTotalArea: yup.string(),
-  propertyCityState: yup.string(),
-  propertyExploredArea: yup.string(),
-  propertyName: yup.string(),
-  propertyOwnerCpf: yup.string(),
+  properties: yup.array().of(
+    yup.object().shape({
+      itrRegistration: yup.string(),
+      totalArea: yup.string(),
+      cityState: yup.string(),
+      exploredArea: yup.string(),
+      name: yup.string(),
+      ownerName: yup.string(),
+      ownerCpf: yup.string(),
+    })
+  ),
 
-  // Section 3.3
-  hasIpiTax: yup.string().required("Esta opção é obrigatória"),
+  hasIpiTax: yup.boolean(),
+  ipiPeriod: yup.string(),
 
-  // Section 3.4
-  hasEmployees: yup.string().required("Esta opção é obrigatória"),
+  hasEmployees: yup.boolean(),
 
-  // Section 4
-  hasOtherActivityOrIncome: yup.string().required("Esta opção é obrigatória"),
+  hasOtherActivityOrIncome: yup.boolean(),
 
-  // Section 4.1
-  hasSpecificIncomeSources: yup.string().required("Esta opção é obrigatória"),
+  hasSpecificIncomeSources: yup.boolean(),
 
-  // Section 4.2
-  isCooperativeMember: yup.string().required("Esta opção é obrigatória"),
+  isCooperativeMember: yup.boolean(),
+  cooperativeEntity: yup.string(),
+  cooperativeCnpj: yup.string(),
+  cooperativeType: yup.string(),
 
-  // Final Declaration Section
   declarationLocation: yup.string().required("Local é obrigatório"),
   declarationDate: yup.string().required("Data da declaração é obrigatória"),
-  signature: yup.string().required("Assinatura é obrigatória"),
 });
 
 type RuralSelfDeclarationFormData = yup.InferType<
@@ -101,22 +101,86 @@ export default function AutodeclaracaoRural() {
     register,
     handleSubmit,
     setValue,
+    control,
     formState: { errors },
   } = useForm<RuralSelfDeclarationFormData>({
     resolver: yupResolver(
       ruralSelfDeclarationSchema
     ) as RuralSelfDeclarationResolver,
     mode: "onChange",
+    defaultValues: {
+      fullName: "",
+      nickname: "",
+      birthDate: "",
+      birthPlace: "",
+      address: "",
+      addressNumber: "",
+      addressNeighborhood: "",
+      addressCity: "",
+      addressState: "",
+      addressZipCode: "",
+      expirationDate: "",
+      rg: "",
+      cpf: "",
+      familyEconomyCondition: "",
+      familyMembers: [
+        {
+          name: "",
+          birthDate: "",
+          cpf: "",
+          maritalStatus: "",
+          relationship: "",
+        },
+      ],
+      properties: [
+        {
+          itrRegistration: "",
+          totalArea: "",
+          cityState: "",
+          exploredArea: "",
+          name: "",
+          ownerName: "",
+          ownerCpf: "",
+        },
+      ],
+      ipiPeriod: "",
+      cooperativeEntity: "",
+      cooperativeCnpj: "",
+      cooperativeType: "",
+      declarationLocation: "",
+      declarationDate: "",
+      hasIpiTax: false,
+      hasEmployees: false,
+      hasOtherActivityOrIncome: false,
+      hasSpecificIncomeSources: false,
+      isCooperativeMember: false,
+    },
+  });
+
+  const {
+    fields: familyMemberFields,
+    append: appendFamilyMember,
+    remove: removeFamilyMember,
+  } = useFieldArray({
+    control,
+    name: "familyMembers",
+  });
+
+  const {
+    fields: propertyFields,
+    append: appendProperty,
+    remove: removeProperty,
+  } = useFieldArray({
+    control,
+    name: "properties",
   });
 
   const onSubmit = (data: RuralSelfDeclarationFormData) => {
-    console.log(data);
+    console.log({ ...data, ...tablesData });
   };
 
   const handleCpfChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const formattedCpf = Util.formatCpfCnpj(e.target.value);
-    // This function can be adapted for multiple CPF fields if needed
-    // For now, it targets the main 'cpf' field.
     setValue("cpf", formattedCpf, { shouldValidate: true });
   };
 
@@ -136,13 +200,13 @@ export default function AutodeclaracaoRural() {
               <div className="space-y-2 flex flex-col gap-[20px] ">
                 <div className="space-y-2">
                   <p className=" text-[#1C3552] text-[18px] font-[600] ">
-                    1. Dados do segurado
+                    1. Dados do Segurado
                   </p>
                   <Label
                     htmlFor="fullName"
                     className="text-[16px] md:text-[15]  text-[#1C3552] font-[400] "
                   >
-                    Nome completo
+                    Nome
                   </Label>
                   <Input
                     id="fullName"
@@ -186,7 +250,7 @@ export default function AutodeclaracaoRural() {
                     htmlFor="birthDate"
                     className="text-[16px] md:text-[15]  text-[#1C3552] font-[400] "
                   >
-                    Data de nascimento
+                    Data de Nascimento/DN
                   </Label>
                   <Input
                     id="birthDate"
@@ -208,7 +272,7 @@ export default function AutodeclaracaoRural() {
                     htmlFor="birthPlace"
                     className="text-[16px] md:text-[15]  text-[#1C3552] font-[400] "
                   >
-                    Local de nascimento
+                    Local de Nascimento
                   </Label>
                   <Input
                     id="birthPlace"
@@ -231,7 +295,7 @@ export default function AutodeclaracaoRural() {
                     htmlFor="address"
                     className="text-[16px] md:text-[15]  text-[#1C3552] font-[400] "
                   >
-                    Endereço
+                    Endereço Residencial
                   </Label>
                   <Input
                     id="address"
@@ -273,28 +337,6 @@ export default function AutodeclaracaoRural() {
 
                     <div className="space-y-2 w-[40%] ">
                       <Label
-                        htmlFor="addressComplement"
-                        className="text-[16px] md:text-[15]  text-[#9A9A9A] font-[400] "
-                      >
-                        Complemento
-                      </Label>
-                      <Input
-                        id="addressComplement"
-                        type="text"
-                        {...register("addressComplement")}
-                        className={`rounded-[8px] w-full p-[18px] md:p-[20px] text-[15] md:text-[18px] placeholder:text-[#CCCCCC] placeholder:italic ${
-                          errors.addressComplement ? "border-red-500" : ""
-                        }`}
-                        placeholder="Digite aqui..."
-                      />
-                      {errors.addressComplement && (
-                        <p className="text-red-500 text-sm">
-                          {errors.addressComplement.message}
-                        </p>
-                      )}
-                    </div>
-                    <div className="space-y-2 w-[40%] ">
-                      <Label
                         htmlFor="addressNeighborhood"
                         className="text-[16px] md:text-[15]  text-[#9A9A9A] font-[400] "
                       >
@@ -323,7 +365,7 @@ export default function AutodeclaracaoRural() {
                         htmlFor="addressCity"
                         className="text-[16px] md:text-[15]  text-[#9A9A9A] font-[400] "
                       >
-                        Cidade
+                        Município
                       </Label>
                       <Input
                         id="addressCity"
@@ -346,7 +388,7 @@ export default function AutodeclaracaoRural() {
                         htmlFor="addressState"
                         className="text-[16px] md:text-[15]  text-[#9A9A9A] font-[400] "
                       >
-                        Estado
+                        UF
                       </Label>
                       <Input
                         id="addressState"
@@ -392,7 +434,7 @@ export default function AutodeclaracaoRural() {
                     htmlFor="expirationDate"
                     className="text-[16px] md:text-[15]  text-[#1C3552] font-[400] "
                   >
-                    Data Expiracao
+                    Data de Expedição
                   </Label>
                   <Input
                     id="expirationDate"
@@ -409,28 +451,7 @@ export default function AutodeclaracaoRural() {
                     </p>
                   )}
                 </div>
-                <div className="space-y-2">
-                  <Label
-                    htmlFor="issuingPlace"
-                    className="text-[16px] md:text-[15]  text-[#1C3552] font-[400] "
-                  >
-                    Local de expedição
-                  </Label>
-                  <Input
-                    id="issuingPlace"
-                    type="text"
-                    {...register("issuingPlace")}
-                    className={`rounded-[8px] w-full h-[35px] px-[18px]  text-[15] placeholder:text-[#CCCCCC] placeholder:italic ${
-                      errors.issuingPlace ? "border-red-500" : ""
-                    }`}
-                    placeholder="Digite aqui..."
-                  />
-                  {errors.issuingPlace && (
-                    <p className="text-red-500 text-sm">
-                      {errors.issuingPlace.message}
-                    </p>
-                  )}
-                </div>
+
                 <div className="space-y-2">
                   <Label
                     htmlFor="rg"
@@ -504,35 +525,51 @@ export default function AutodeclaracaoRural() {
                     familiar, informe sua condição no grupo na data do
                     requerimento
                   </p>
-                  <div className=" flex flex-row items-center gap-2 ml-4 ">
-                    <Checkbox
-                      {...register("familyEconomyCondition")}
-                      value="titular"
-                      className=" border-1 border-[#A7A7A7] rounded-[0px] "
-                      id="familyEconomyConditionHolder"
-                    />
-                    <Label
-                      htmlFor="familyEconomyConditionHolder"
-                      className="text-[14px]   text-[#1C3552] font-[300] "
-                    >
-                      Titular
-                    </Label>
-                  </div>
+                  <Controller
+                    name="familyEconomyCondition"
+                    control={control}
+                    render={({ field }) => (
+                      <>
+                        <div className=" flex flex-row items-center gap-2 ml-4 ">
+                          <Checkbox
+                            checked={field.value === "titular"}
+                            onCheckedChange={(checked) => {
+                              if (checked) {
+                                field.onChange("titular");
+                              }
+                            }}
+                            className=" border-1 border-[#A7A7A7] rounded-[0px] "
+                            id="familyEconomyConditionHolder"
+                          />
+                          <Label
+                            htmlFor="familyEconomyConditionHolder"
+                            className="text-[14px]   text-[#1C3552] font-[300] "
+                          >
+                            Titular
+                          </Label>
+                        </div>
 
-                  <div className=" flex flex-row items-center gap-2 ml-4 ">
-                    <Checkbox
-                      {...register("familyEconomyCondition")}
-                      value="componente"
-                      className=" border-1 border-[#A7A7A7] rounded-[0px] "
-                      id="familyEconomyConditionComponent"
-                    />
-                    <Label
-                      htmlFor="familyEconomyConditionComponent"
-                      className="text-[14px]   text-[#1C3552] font-[300] "
-                    >
-                      Componente
-                    </Label>
-                  </div>
+                        <div className=" flex flex-row items-center gap-2 ml-4 ">
+                          <Checkbox
+                            checked={field.value === "componente"}
+                            onCheckedChange={(checked) => {
+                              if (checked) {
+                                field.onChange("componente");
+                              }
+                            }}
+                            className=" border-1 border-[#A7A7A7] rounded-[0px] "
+                            id="familyEconomyConditionComponent"
+                          />
+                          <Label
+                            htmlFor="familyEconomyConditionComponent"
+                            className="text-[14px]   text-[#1C3552] font-[300] "
+                          >
+                            Componente
+                          </Label>
+                        </div>
+                      </>
+                    )}
+                  />
                   {errors.familyEconomyCondition && (
                     <p className="text-red-500 text-sm">
                       {errors.familyEconomyCondition.message}
@@ -549,126 +586,111 @@ export default function AutodeclaracaoRural() {
                 </div>
 
                 <div className=" flex flex-col gap-5 ">
-                  <div className="space-y-2 grid grid-cols-2 gap-4  border-1 border-[#529FF6] rounded-[8px] p-4 ">
-                    <div className="flex flex-col gap-2">
-                      <Label
-                        htmlFor="familyMemberName"
-                        className="text-[16px] md:text-[15]  text-[#1C3552] font-[400] "
-                      >
-                        Nome
-                      </Label>
-                      <Input
-                        id="familyMemberName"
-                        type="text"
-                        {...register("familyMemberName")}
-                        className={`rounded-[8px] w-full h-[35px] px-[18px]  text-[15] placeholder:text-[#CCCCCC] placeholder:italic ${
-                          errors.familyMemberName ? "border-red-500" : ""
-                        }`}
-                        placeholder="Digite aqui..."
-                      />
-                      {errors.familyMemberName && (
-                        <p className="text-red-500 text-sm">
-                          {errors.familyMemberName.message}
-                        </p>
+                  {familyMemberFields.map((item, index) => (
+                    <div
+                      key={item.id}
+                      className="space-y-2 grid grid-cols-2 gap-4  border-1 border-[#529FF6] rounded-[8px] p-4 relative pt-10"
+                    >
+                      <div className="flex flex-col gap-2">
+                        <Label
+                          htmlFor={`familyMembers.${index}.name`}
+                          className="text-[16px] md:text-[15]  text-[#1C3552] font-[400] "
+                        >
+                          Nome
+                        </Label>
+                        <Input
+                          id={`familyMembers.${index}.name`}
+                          type="text"
+                          {...register(`familyMembers.${index}.name`)}
+                          className="rounded-[8px] w-full h-[35px] px-[18px] text-[15] placeholder:text-[#CCCCCC] placeholder:italic"
+                          placeholder="Digite aqui..."
+                        />
+                      </div>
+                      <div className="flex flex-col gap-2">
+                        <Label
+                          htmlFor={`familyMembers.${index}.birthDate`}
+                          className="text-[16px] md:text-[15]  text-[#1C3552] font-[400] "
+                        >
+                          DN
+                        </Label>
+                        <Input
+                          id={`familyMembers.${index}.birthDate`}
+                          type="date"
+                          {...register(`familyMembers.${index}.birthDate`)}
+                          className="rounded-[8px] w-full h-[35px] px-[18px] text-[15] placeholder:text-[#CCCCCC] placeholder:italic"
+                          placeholder="Digite aqui..."
+                        />
+                      </div>
+                      <div className="flex flex-col gap-2">
+                        <Label
+                          htmlFor={`familyMembers.${index}.cpf`}
+                          className="text-[16px] md:text-[15]  text-[#1C3552] font-[400] "
+                        >
+                          CPF(Número)
+                        </Label>
+                        <Input
+                          id={`familyMembers.${index}.cpf`}
+                          type="text"
+                          {...register(`familyMembers.${index}.cpf`)}
+                          className="rounded-[8px] w-full h-[35px] px-[18px] text-[15] placeholder:text-[#CCCCCC] placeholder:italic"
+                          placeholder="Digite aqui..."
+                        />
+                      </div>
+                      <div className="flex flex-col gap-2">
+                        <Label
+                          htmlFor={`familyMembers.${index}.maritalStatus`}
+                          className="text-[16px] md:text-[15]  text-[#1C3552] font-[400] "
+                        >
+                          Estado Civil
+                        </Label>
+                        <Input
+                          id={`familyMembers.${index}.maritalStatus`}
+                          type="text"
+                          {...register(`familyMembers.${index}.maritalStatus`)}
+                          className="rounded-[8px] w-full h-[35px] px-[18px] text-[15] placeholder:text-[#CCCCCC] placeholder:italic"
+                          placeholder="Digite aqui..."
+                        />
+                      </div>
+                      <div className="flex flex-col gap-2">
+                        <Label
+                          htmlFor={`familyMembers.${index}.relationship`}
+                          className="text-[16px] md:text-[15]  text-[#1C3552] font-[400] "
+                        >
+                          Parentesco
+                        </Label>
+                        <Input
+                          id={`familyMembers.${index}.relationship`}
+                          type="text"
+                          {...register(`familyMembers.${index}.relationship`)}
+                          className="rounded-[8px] w-full h-[35px] px-[18px] text-[15] placeholder:text-[#CCCCCC] placeholder:italic"
+                          placeholder="Digite aqui..."
+                        />
+                      </div>
+                      {familyMemberFields.length > 1 && (
+                        <Button
+                          type="button"
+                          onClick={() => removeFamilyMember(index)}
+                          className="absolute top-2 right-2 bg-red-500 hover:bg-red-700 text-white p-2 h-auto rounded-full cursor-pointer "
+                        >
+                          <Trash2 size={16} />
+                        </Button>
                       )}
                     </div>
-                    <div className="flex flex-col gap-2">
-                      <Label
-                        htmlFor="familyMemberBirthCertificate"
-                        className="text-[16px] md:text-[15]  text-[#1C3552] font-[400] "
-                      >
-                        CN
-                      </Label>
-                      <Input
-                        id="familyMemberBirthCertificate"
-                        type="text"
-                        {...register("familyMemberBirthCertificate")}
-                        className={`rounded-[8px] w-full h-[35px] px-[18px]  text-[15] placeholder:text-[#CCCCCC] placeholder:italic ${
-                          errors.familyMemberBirthCertificate
-                            ? "border-red-500"
-                            : ""
-                        }`}
-                        placeholder="Digite aqui..."
-                      />
-                      {errors.familyMemberBirthCertificate && (
-                        <p className="text-red-500 text-sm">
-                          {errors.familyMemberBirthCertificate.message}
-                        </p>
-                      )}
-                    </div>
-                    <div className="flex flex-col gap-2">
-                      <Label
-                        htmlFor="familyMemberCpf"
-                        className="text-[16px] md:text-[15]  text-[#1C3552] font-[400] "
-                      >
-                        CPF(Número)
-                      </Label>
-                      <Input
-                        id="familyMemberCpf"
-                        type="text"
-                        {...register("familyMemberCpf")}
-                        className={`rounded-[8px] w-full h-[35px] px-[18px]  text-[15] placeholder:text-[#CCCCCC] placeholder:italic ${
-                          errors.familyMemberCpf ? "border-red-500" : ""
-                        }`}
-                        placeholder="Digite aqui..."
-                      />
-                      {errors.familyMemberCpf && (
-                        <p className="text-red-500 text-sm">
-                          {errors.familyMemberCpf.message}
-                        </p>
-                      )}
-                    </div>
-                    <div className="flex flex-col gap-2">
-                      <Label
-                        htmlFor="familyMemberMaritalStatus"
-                        className="text-[16px] md:text-[15]  text-[#1C3552] font-[400] "
-                      >
-                        Estado Civil
-                      </Label>
-                      <Input
-                        id="familyMemberMaritalStatus"
-                        type="text"
-                        {...register("familyMemberMaritalStatus")}
-                        className={`rounded-[8px] w-full h-[35px] px-[18px]  text-[15] placeholder:text-[#CCCCCC] placeholder:italic ${
-                          errors.familyMemberMaritalStatus
-                            ? "border-red-500"
-                            : ""
-                        }`}
-                        placeholder="Digite aqui..."
-                      />
-                      {errors.familyMemberMaritalStatus && (
-                        <p className="text-red-500 text-sm">
-                          {errors.familyMemberMaritalStatus.message}
-                        </p>
-                      )}
-                    </div>
-                    <div className="flex flex-col gap-2">
-                      <Label
-                        htmlFor="familyMemberRelationship"
-                        className="text-[16px] md:text-[15]  text-[#1C3552] font-[400] "
-                      >
-                        Parentesco
-                      </Label>
-                      <Input
-                        id="familyMemberRelationship"
-                        type="text"
-                        {...register("familyMemberRelationship")}
-                        className={`rounded-[8px] w-full h-[35px] px-[18px]  text-[15] placeholder:text-[#CCCCCC] placeholder:italic ${
-                          errors.familyMemberRelationship
-                            ? "border-red-500"
-                            : ""
-                        }`}
-                        placeholder="Digite aqui..."
-                      />
-                      {errors.familyMemberRelationship && (
-                        <p className="text-red-500 text-sm">
-                          {errors.familyMemberRelationship.message}
-                        </p>
-                      )}
-                    </div>
-                  </div>
+                  ))}
                   <div>
-                    <Button className=" w-full border-2 border-[#529FF6] bg-transparent text-[#529FF6] cursor-pointer hover:bg-[#529FF6] hover:text-white  ">
+                    <Button
+                      type="button"
+                      onClick={() =>
+                        appendFamilyMember({
+                          name: "",
+                          birthDate: "",
+                          cpf: "",
+                          maritalStatus: "",
+                          relationship: "",
+                        })
+                      }
+                      className=" w-full border-2 border-[#529FF6] bg-transparent text-[#529FF6] cursor-pointer hover:bg-[#529FF6] hover:text-white  "
+                    >
                       Adicionar novo integrante <Plus />
                     </Button>
                   </div>
@@ -683,10 +705,9 @@ export default function AutodeclaracaoRural() {
                   <TableEditable
                     name="landCession"
                     colums={[
-                      { label: "Tipo de cessão*" },
-                      { label: "Período (DD/MM/AAAA a DD/MM/AAAA)" },
-                      { label: "Nome do cessionário" },
-                      { label: "CPF do cessionário" },
+                      { label: "FORMA DE CESSÃO*" },
+                      { label: "PERÍODO(XX/XX/XXXX A XX/XX/XXXX)" },
+                      { label: "ÁREA CEDIDA em hectare - ha" },
                     ]}
                     onChange={handleTableChange}
                     lineInitial={3}
@@ -697,143 +718,148 @@ export default function AutodeclaracaoRural() {
                 </div>
 
                 <div className=" flex flex-col gap-5 ">
-                  <div className="space-y-2 grid grid-cols-2 gap-4  border-1 border-[#529FF6] rounded-[8px] p-4 ">
-                    <div className="flex flex-col gap-2">
-                      <Label
-                        htmlFor="propertyItrRegistration"
-                        className="text-[16px] md:text-[15]  text-[#1C3552] font-[400] "
-                      >
-                        Registro ITR, se possuir
-                      </Label>
-                      <Input
-                        id="propertyItrRegistration"
-                        type="text"
-                        {...register("propertyItrRegistration")}
-                        className={`rounded-[8px] w-full h-[35px] px-[18px]  text-[15] placeholder:text-[#CCCCCC] placeholder:italic ${
-                          errors.propertyItrRegistration ? "border-red-500" : ""
-                        }`}
-                        placeholder="Digite aqui..."
-                      />
-                      {errors.propertyItrRegistration && (
-                        <p className="text-red-500 text-sm">
-                          {errors.propertyItrRegistration.message}
-                        </p>
+                  <p className=" text-[#1C3552] text-[18px] font-[600] ">
+                    3.1. Informe os dados da(s) terra(s), onde exerceu ou exerce
+                    a atividade rural (conforme item 2):
+                  </p>
+                  {propertyFields.map((item, index) => (
+                    <div
+                      key={item.id}
+                      className="space-y-2 grid grid-cols-2 gap-4  border-1 border-[#529FF6] rounded-[8px] p-4 relative pt-10"
+                    >
+                      <div className="flex flex-col gap-2">
+                        <Label
+                          htmlFor={`properties.${index}.itrRegistration`}
+                          className="text-[16px] md:text-[15]  text-[#1C3552] font-[400] "
+                        >
+                          Registro ITR, se possuir
+                        </Label>
+                        <Input
+                          id={`properties.${index}.itrRegistration`}
+                          type="text"
+                          {...register(`properties.${index}.itrRegistration`)}
+                          className="rounded-[8px] w-full h-[35px] px-[18px] text-[15] placeholder:text-[#CCCCCC] placeholder:italic"
+                          placeholder="Digite aqui..."
+                        />
+                      </div>
+                      <div className="flex flex-col gap-2">
+                        <Label
+                          htmlFor={`properties.${index}.totalArea`}
+                          className="text-[16px] md:text-[15]  text-[#1C3552] font-[400] "
+                        >
+                          Área total do imóvel (ha)
+                        </Label>
+                        <Input
+                          id={`properties.${index}.totalArea`}
+                          type="text"
+                          {...register(`properties.${index}.totalArea`)}
+                          className="rounded-[8px] w-full h-[35px] px-[18px] text-[15] placeholder:text-[#CCCCCC] placeholder:italic"
+                          placeholder="Digite aqui..."
+                        />
+                      </div>
+                      <div className="flex flex-col gap-2">
+                        <Label
+                          htmlFor={`properties.${index}.cityState`}
+                          className="text-[16px] md:text-[15]  text-[#1C3552] font-[400] "
+                        >
+                          Município/UF
+                        </Label>
+                        <Input
+                          id={`properties.${index}.cityState`}
+                          type="text"
+                          {...register(`properties.${index}.cityState`)}
+                          className="rounded-[8px] w-full h-[35px] px-[18px] text-[15] placeholder:text-[#CCCCCC] placeholder:italic"
+                          placeholder="Digite aqui..."
+                        />
+                      </div>
+                      <div className="flex flex-col gap-2">
+                        <Label
+                          htmlFor={`properties.${index}.exploredArea`}
+                          className="text-[16px] md:text-[15]  text-[#1C3552] font-[400] "
+                        >
+                          Área explorada pelo requerente (ha)
+                        </Label>
+                        <Input
+                          id={`properties.${index}.exploredArea`}
+                          type="text"
+                          {...register(`properties.${index}.exploredArea`)}
+                          className="rounded-[8px] w-full h-[35px] px-[18px] text-[15] placeholder:text-[#CCCCCC] placeholder:italic"
+                          placeholder="Digite aqui..."
+                        />
+                      </div>
+                      <div className="flex flex-col gap-2">
+                        <Label
+                          htmlFor={`properties.${index}.name`}
+                          className="text-[16px] md:text-[15]  text-[#1C3552] font-[400] "
+                        >
+                          Nome da propriedade
+                        </Label>
+                        <Input
+                          id={`properties.${index}.name`}
+                          type="text"
+                          {...register(`properties.${index}.name`)}
+                          className="rounded-[8px] w-full h-[35px] px-[18px] text-[15] placeholder:text-[#CCCCCC] placeholder:italic"
+                          placeholder="Digite aqui..."
+                        />
+                      </div>
+                      <div className="flex flex-col gap-2">
+                        <Label
+                          htmlFor={`properties.${index}.ownerName`}
+                          className="text-[16px] md:text-[15]  text-[#1C3552] font-[400] "
+                        >
+                          Nome do proprietário
+                        </Label>
+                        <Input
+                          id={`properties.${index}.ownerName`}
+                          type="text"
+                          {...register(`properties.${index}.ownerName`)}
+                          className="rounded-[8px] w-full h-[35px] px-[18px] text-[15] placeholder:text-[#CCCCCC] placeholder:italic"
+                          placeholder="Digite aqui..."
+                        />
+                      </div>
+                      <div className="flex flex-col gap-2">
+                        <Label
+                          htmlFor={`properties.${index}.ownerCpf`}
+                          className="text-[16px] md:text-[15]  text-[#1C3552] font-[400] "
+                        >
+                          CPF do Proprietário
+                        </Label>
+                        <Input
+                          id={`properties.${index}.ownerCpf`}
+                          type="text"
+                          {...register(`properties.${index}.ownerCpf`)}
+                          className="rounded-[8px] w-full h-[35px] px-[18px] text-[15] placeholder:text-[#CCCCCC] placeholder:italic"
+                          placeholder="Digite aqui..."
+                        />
+                      </div>
+                      {propertyFields.length > 1 && (
+                        <Button
+                          type="button"
+                          onClick={() => removeProperty(index)}
+                          className="absolute top-2 right-2 bg-red-500 hover:bg-red-700 text-white p-2 h-auto rounded-full"
+                        >
+                          <Trash2 size={16} />
+                        </Button>
                       )}
                     </div>
-                    <div className="flex flex-col gap-2">
-                      <Label
-                        htmlFor="propertyTotalArea"
-                        className="text-[16px] md:text-[15]  text-[#1C3552] font-[400] "
-                      >
-                        Área total do imóvel (ha)
-                      </Label>
-                      <Input
-                        id="propertyTotalArea"
-                        type="text"
-                        {...register("propertyTotalArea")}
-                        className={`rounded-[8px] w-full h-[35px] px-[18px]  text-[15] placeholder:text-[#CCCCCC] placeholder:italic ${
-                          errors.propertyTotalArea ? "border-red-500" : ""
-                        }`}
-                        placeholder="Digite aqui..."
-                      />
-                      {errors.propertyTotalArea && (
-                        <p className="text-red-500 text-sm">
-                          {errors.propertyTotalArea.message}
-                        </p>
-                      )}
-                    </div>
-                    <div className="flex flex-col gap-2">
-                      <Label
-                        htmlFor="propertyCityState"
-                        className="text-[16px] md:text-[15]  text-[#1C3552] font-[400] "
-                      >
-                        Município/UF
-                      </Label>
-                      <Input
-                        id="propertyCityState"
-                        type="text"
-                        {...register("propertyCityState")}
-                        className={`rounded-[8px] w-full h-[35px] px-[18px]  text-[15] placeholder:text-[#CCCCCC] placeholder:italic ${
-                          errors.propertyCityState ? "border-red-500" : ""
-                        }`}
-                        placeholder="Digite aqui..."
-                      />
-                      {errors.propertyCityState && (
-                        <p className="text-red-500 text-sm">
-                          {errors.propertyCityState.message}
-                        </p>
-                      )}
-                    </div>
-                    <div className="flex flex-col gap-2">
-                      <Label
-                        htmlFor="propertyExploredArea"
-                        className="text-[16px] md:text-[15]  text-[#1C3552] font-[400] "
-                      >
-                        Área explorada pelo requerente (ha)
-                      </Label>
-                      <Input
-                        id="propertyExploredArea"
-                        type="text"
-                        {...register("propertyExploredArea")}
-                        className={`rounded-[8px] w-full h-[35px] px-[18px]  text-[15] placeholder:text-[#CCCCCC] placeholder:italic ${
-                          errors.propertyExploredArea ? "border-red-500" : ""
-                        }`}
-                        placeholder="Digite aqui..."
-                      />
-                      {errors.propertyExploredArea && (
-                        <p className="text-red-500 text-sm">
-                          {errors.propertyExploredArea.message}
-                        </p>
-                      )}
-                    </div>
-                    <div className="flex flex-col gap-2">
-                      <Label
-                        htmlFor="propertyName"
-                        className="text-[16px] md:text-[15]  text-[#1C3552] font-[400] "
-                      >
-                        Nome da propriedade
-                      </Label>
-                      <Input
-                        id="propertyName"
-                        type="text"
-                        {...register("propertyName")}
-                        className={`rounded-[8px] w-full h-[35px] px-[18px]  text-[15] placeholder:text-[#CCCCCC] placeholder:italic ${
-                          errors.propertyName ? "border-red-500" : ""
-                        }`}
-                        placeholder="Digite aqui..."
-                      />
-                      {errors.propertyName && (
-                        <p className="text-red-500 text-sm">
-                          {errors.propertyName.message}
-                        </p>
-                      )}
-                    </div>
-                    <div className="flex flex-col gap-2">
-                      <Label
-                        htmlFor="propertyOwnerCpf"
-                        className="text-[16px] md:text-[15]  text-[#1C3552] font-[400] "
-                      >
-                        CPF do Proprietário
-                      </Label>
-                      <Input
-                        id="propertyOwnerCpf"
-                        type="text"
-                        {...register("propertyOwnerCpf")}
-                        className={`rounded-[8px] w-full h-[35px] px-[18px]  text-[15] placeholder:text-[#CCCCCC] placeholder:italic ${
-                          errors.propertyOwnerCpf ? "border-red-500" : ""
-                        }`}
-                        placeholder="Digite aqui..."
-                      />
-                      {errors.propertyOwnerCpf && (
-                        <p className="text-red-500 text-sm">
-                          {errors.propertyOwnerCpf.message}
-                        </p>
-                      )}
-                    </div>
-                  </div>
+                  ))}
                   <div>
-                    <Button className=" w-full border-2 border-[#529FF6] bg-transparent text-[#529FF6] cursor-pointer hover:bg-[#529FF6] hover:text-white  ">
-                      Adicionar novo integrante <Plus />
+                    <Button
+                      type="button"
+                      onClick={() =>
+                        appendProperty({
+                          itrRegistration: "",
+                          totalArea: "",
+                          cityState: "",
+                          exploredArea: "",
+                          name: "",
+                          ownerName: "",
+                          ownerCpf: "",
+                        })
+                      }
+                      className=" w-full border-2 border-[#529FF6] bg-transparent text-[#529FF6] cursor-pointer hover:bg-[#529FF6] hover:text-white  "
+                    >
+                      Adicionar nova terra <Plus />
                     </Button>
                   </div>
                 </div>
@@ -847,12 +873,8 @@ export default function AutodeclaracaoRural() {
                   <TableEditable
                     name="ruralExploration"
                     colums={[
-                      { label: "Atividade" },
-                      {
-                        label: "Subsistência/venda",
-                        type: "select",
-                        options: ["Teste 1", "Teste 2"],
-                      },
+                      { label: "ATIVIDADE" },
+                      { label: "SUBSISTÊNCIA/VENDA" },
                     ]}
                     onChange={handleTableChange}
                     lineInitial={3}
@@ -865,44 +887,47 @@ export default function AutodeclaracaoRural() {
                     Industrializados - IPI sobre a venda da produção:
                   </p>
                   <div className=" flex flex-row items-center gap-2 ml-4 ">
-                    <Checkbox
-                      {...register("hasIpiTax")}
-                      value="sim"
-                      className=" border-1 border-[#A7A7A7] rounded-[0px] "
-                      id="hasIpiTaxYes"
+                    <Controller
+                      name="hasIpiTax"
+                      control={control}
+                      render={({ field }) => (
+                        <Checkbox
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                          className="border-1 border-[#A7A7A7] rounded-[0px]"
+                          id="hasIpiTax"
+                        />
+                      )}
                     />
                     <Label
-                      htmlFor="hasIpiTaxYes"
+                      htmlFor="hasIpiTax"
                       className="text-[14px]   text-[#1C3552] font-[300] "
                     >
                       Sim
                     </Label>
                   </div>
-
-                  <div className=" flex flex-row items-center gap-2 ml-4 ">
-                    <Checkbox
-                      {...register("hasIpiTax")}
-                      value="nao"
-                      className=" border-1 border-[#A7A7A7] rounded-[0px] "
-                      id="hasIpiTaxNo"
-                    />
+                  <div className="flex flex-col gap-2">
                     <Label
-                      htmlFor="hasIpiTaxNo"
-                      className="text-[14px]   text-[#1C3552] font-[300] "
+                      htmlFor="ipiPeriod"
+                      className="text-[16px] md:text-[15]  text-[#1C3552] font-[400] "
                     >
-                      Não
+                      Período (XX/XX/XXXX A XX/XX/XXXX)
                     </Label>
+                    <Input
+                      id="ipiPeriod"
+                      type="text"
+                      {...register("ipiPeriod")}
+                      className={`rounded-[8px] w-full h-[35px] px-[18px]  text-[15] placeholder:text-[#CCCCCC] placeholder:italic ${
+                        errors.ipiPeriod ? "border-red-500" : ""
+                      }`}
+                      placeholder="Ex: 01/01/2020 a 31/12/2020"
+                    />
+                    {errors.ipiPeriod && (
+                      <p className="text-red-500 text-sm">
+                        {errors.ipiPeriod.message}
+                      </p>
+                    )}
                   </div>
-                  <TableEditable
-                    name="ipiTaxDetails"
-                    colums={[
-                      { label: "Produto" },
-                      { label: "Valor do IPI" },
-                      { label: "Período" },
-                    ]}
-                    onChange={handleTableChange}
-                    lineInitial={3}
-                  />
                   {errors.hasIpiTax && (
                     <p className="text-red-500 text-sm">
                       {errors.hasIpiTax.message}
@@ -915,41 +940,31 @@ export default function AutodeclaracaoRural() {
                     3.4. Possui empregado(s) ou prestador(es) de serviço:
                   </p>
                   <div className=" flex flex-row items-center gap-2 ml-4 ">
-                    <Checkbox
-                      {...register("hasEmployees")}
-                      value="sim"
-                      className=" border-1 border-[#A7A7A7] rounded-[0px] "
-                      id="hasEmployeesYes"
+                    <Controller
+                      name="hasEmployees"
+                      control={control}
+                      render={({ field }) => (
+                        <Checkbox
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                          className="border-1 border-[#A7A7A7] rounded-[0px]"
+                          id="hasEmployees"
+                        />
+                      )}
                     />
                     <Label
-                      htmlFor="hasEmployeesYes"
+                      htmlFor="hasEmployees"
                       className="text-[14px]   text-[#1C3552] font-[300] "
                     >
                       Sim
                     </Label>
                   </div>
-
-                  <div className=" flex flex-row items-center gap-2 ml-4 ">
-                    <Checkbox
-                      {...register("hasEmployees")}
-                      value="nao"
-                      className=" border-1 border-[#A7A7A7] rounded-[0px] "
-                      id="hasEmployeesNo"
-                    />
-                    <Label
-                      htmlFor="hasEmployeesNo"
-                      className="text-[14px]   text-[#1C3552] font-[300] "
-                    >
-                      Não
-                    </Label>
-                  </div>
                   <TableEditable
                     name="employeesDetails"
                     colums={[
-                      { label: "Nome" },
-                      { label: "CPF" },
-                      { label: "Função" },
-                      { label: "Período" },
+                      { label: "NOME" },
+                      { label: "CPF, se possuir" },
+                      { label: "PERÍODO (XX/XX/XXXX a XX/XX/XXXX)" },
                     ]}
                     onChange={handleTableChange}
                     lineInitial={3}
@@ -967,44 +982,39 @@ export default function AutodeclaracaoRural() {
                     recebe/recebeu outra renda:
                   </p>
                   <div className=" flex flex-row items-center gap-2 ml-4 ">
-                    <Checkbox
-                      {...register("hasOtherActivityOrIncome")}
-                      value="sim"
-                      className=" border-1 border-[#A7A7A7] rounded-[0px] "
-                      id="hasOtherActivityOrIncomeYes"
+                    <Controller
+                      name="hasOtherActivityOrIncome"
+                      control={control}
+                      render={({ field }) => (
+                        <Checkbox
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                          className="border-1 border-[#A7A7A7] rounded-[0px]"
+                          id="hasOtherActivityOrIncome"
+                        />
+                      )}
                     />
                     <Label
-                      htmlFor="hasOtherActivityOrIncomeYes"
+                      htmlFor="hasOtherActivityOrIncome"
                       className="text-[14px]   text-[#1C3552] font-[300] "
                     >
                       Sim
                     </Label>
                   </div>
-
-                  <div className=" flex flex-row items-center gap-2 ml-4 ">
-                    <Checkbox
-                      {...register("hasOtherActivityOrIncome")}
-                      value="nao"
-                      className=" border-1 border-[#A7A7A7] rounded-[0px] "
-                      id="hasOtherActivityOrIncomeNo"
-                    />
-                    <Label
-                      htmlFor="hasOtherActivityOrIncomeNo"
-                      className="text-[14px]   text-[#1C3552] font-[300] "
-                    >
-                      Não
-                    </Label>
-                  </div>
                   <TableEditable
                     name="otherActivitiesIncome"
                     colums={[
-                      { label: "Atividade" },
-                      { label: "Renda Mensal" },
-                      { label: "Período" },
+                      { label: "ATIVIDADE/RENDA*" },
+                      { label: "LOCAL" },
+                      { label: "PERÍODO (XX/XX/XXXX a XX/XX/XXXX)" },
                     ]}
                     onChange={handleTableChange}
                     lineInitial={3}
                   />
+                  <p className=" font-[300] text-[16px]  text-[#5F5F5F]  ">
+                    *Pedreiro, carpinteiro, pintor, servidor público, empregado
+                    rural, entre outros.
+                  </p>
                   {errors.hasOtherActivityOrIncome && (
                     <p className="text-red-500 text-sm">
                       {errors.hasOtherActivityOrIncome.message}
@@ -1019,44 +1029,42 @@ export default function AutodeclaracaoRural() {
                     dirigente sindical ou de cooperativa, mandato de vereador:
                   </p>
                   <div className=" flex flex-row items-center gap-2 ml-4 ">
-                    <Checkbox
-                      {...register("hasSpecificIncomeSources")}
-                      value="sim"
-                      className=" border-1 border-[#A7A7A7] rounded-[0px] "
-                      id="hasSpecificIncomeSourcesYes"
+                    <Controller
+                      name="hasSpecificIncomeSources"
+                      control={control}
+                      render={({ field }) => (
+                        <Checkbox
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                          className="border-1 border-[#A7A7A7] rounded-[0px]"
+                          id="hasSpecificIncomeSources"
+                        />
+                      )}
                     />
                     <Label
-                      htmlFor="hasSpecificIncomeSourcesYes"
+                      htmlFor="hasSpecificIncomeSources"
                       className="text-[14px]   text-[#1C3552] font-[300] "
                     >
                       Sim
                     </Label>
                   </div>
-
-                  <div className=" flex flex-row items-center gap-2 ml-4 ">
-                    <Checkbox
-                      {...register("hasSpecificIncomeSources")}
-                      value="nao"
-                      className=" border-1 border-[#A7A7A7] rounded-[0px] "
-                      id="hasSpecificIncomeSourcesNo"
-                    />
-                    <Label
-                      htmlFor="hasSpecificIncomeSourcesNo"
-                      className="text-[14px]   text-[#1C3552] font-[300] "
-                    >
-                      Não
-                    </Label>
-                  </div>
                   <TableEditable
                     name="specificIncomeSources"
                     colums={[
-                      { label: "Tipo de Atividade" },
-                      { label: "Renda Mensal" },
-                      { label: "Período" },
+                      { label: "ATIVIDADE" },
+                      { label: "PERÍODO (xx/xx/xxxx a xx/xx/xxxx)" },
+                      { label: "RENDA (R$)" },
+                      { label: "OUTRAS INFORMAÇÕES*" },
                     ]}
                     onChange={handleTableChange}
                     lineInitial={3}
                   />
+                  <p className=" font-[300] text-[16px]  text-[#5F5F5F]  ">
+                    * Para atividade artesanal, informar a origem da matéria
+                    prima. Para mandato de vereador, informar o Município. Para
+                    exploração de atividade turística na propriedade, indicar os
+                    dias de hospedagem por exercício.
+                  </p>
                   {errors.hasSpecificIncomeSources && (
                     <p className="text-red-500 text-sm">
                       {errors.hasSpecificIncomeSources.message}
@@ -1068,44 +1076,78 @@ export default function AutodeclaracaoRural() {
                     4.2. Informe se participa de cooperativa:
                   </p>
                   <div className=" flex flex-row items-center gap-2 ml-4 ">
-                    <Checkbox
-                      {...register("isCooperativeMember")}
-                      value="sim"
-                      className=" border-1 border-[#A7A7A7] rounded-[0px] "
-                      id="isCooperativeMemberYes"
+                    <Controller
+                      name="isCooperativeMember"
+                      control={control}
+                      render={({ field }) => (
+                        <Checkbox
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                          className="border-1 border-[#A7A7A7] rounded-[0px]"
+                          id="isCooperativeMember"
+                        />
+                      )}
                     />
                     <Label
-                      htmlFor="isCooperativeMemberYes"
+                      htmlFor="isCooperativeMember"
                       className="text-[14px]   text-[#1C3552] font-[300] "
                     >
                       Sim
                     </Label>
                   </div>
-
-                  <div className=" flex flex-row items-center gap-2 ml-4 ">
-                    <Checkbox
-                      {...register("isCooperativeMember")}
-                      value="nao"
-                      className=" border-1 border-[#A7A7A7] rounded-[0px] "
-                      id="isCooperativeMemberNo"
-                    />
-                    <Label
-                      htmlFor="isCooperativeMemberNo"
-                      className="text-[14px]   text-[#1C3552] font-[300] "
-                    >
-                      Não
-                    </Label>
+                  <div className="flex flex-col gap-4 mt-4">
+                    <div className="flex flex-col gap-2">
+                      <Label
+                        htmlFor="cooperativeEntity"
+                        className="text-[16px] md:text-[15]  text-[#1C3552] font-[400] "
+                      >
+                        ENTIDADE
+                      </Label>
+                      <Input
+                        id="cooperativeEntity"
+                        type="text"
+                        {...register("cooperativeEntity")}
+                        className={`rounded-[8px] w-full h-[35px] px-[18px]  text-[15] placeholder:text-[#CCCCCC] placeholder:italic ${
+                          errors.cooperativeEntity ? "border-red-500" : ""
+                        }`}
+                        placeholder="Digite o nome da entidade"
+                      />
+                    </div>
+                    <div className="flex flex-col gap-2">
+                      <Label
+                        htmlFor="cooperativeCnpj"
+                        className="text-[16px] md:text-[15]  text-[#1C3552] font-[400] "
+                      >
+                        CNPJ
+                      </Label>
+                      <Input
+                        id="cooperativeCnpj"
+                        type="text"
+                        {...register("cooperativeCnpj")}
+                        className={`rounded-[8px] w-full h-[35px] px-[18px]  text-[15] placeholder:text-[#CCCCCC] placeholder:italic ${
+                          errors.cooperativeCnpj ? "border-red-500" : ""
+                        }`}
+                        placeholder="Digite o CNPJ"
+                      />
+                    </div>
+                    <div className="flex flex-col gap-2">
+                      <Label
+                        htmlFor="cooperativeType"
+                        className="text-[16px] md:text-[15]  text-[#1C3552] font-[400] "
+                      >
+                        INFORMAR SE É AGROPECUÁRIA OU DE CREDITO RURAL
+                      </Label>
+                      <Input
+                        id="cooperativeType"
+                        type="text"
+                        {...register("cooperativeType")}
+                        className={`rounded-[8px] w-full h-[35px] px-[18px]  text-[15] placeholder:text-[#CCCCCC] placeholder:italic ${
+                          errors.cooperativeType ? "border-red-500" : ""
+                        }`}
+                        placeholder="Agropecuária ou Crédito Rural"
+                      />
+                    </div>
                   </div>
-                  <TableEditable
-                    name="cooperativeDetails"
-                    colums={[
-                      { label: "Nome da Cooperativa" },
-                      { label: "CNPJ" },
-                      { label: "Tipo de Participação" },
-                    ]}
-                    onChange={handleTableChange}
-                    lineInitial={3}
-                  />
                   {errors.isCooperativeMember && (
                     <p className="text-red-500 text-sm">
                       {errors.isCooperativeMember.message}
@@ -1167,35 +1209,9 @@ export default function AutodeclaracaoRural() {
                       )}
                     </div>
                   </div>
-
-                  <div className=" flex flex-row items-center gap-5 w-full ">
-                    <div className="w-[50%] ">
-                      <Label
-                        htmlFor="signature"
-                        className="text-[16px] md:text-[15]  text-[#1C3552] font-[400] "
-                      >
-                        Assinatura do segurado/requerente:
-                      </Label>
-                      <Input
-                        id="signature"
-                        type="text"
-                        {...register("signature")}
-                        className={` rounded-[0px] w-full h-[35px] px-[18px]  text-[15] placeholder:text-[#CCCCCC] placeholder:italic border-t-0 border-r-0 border-l-0 border-b-1 border-[#CCCCCC]  shadow-none  ${
-                          errors.signature ? "border-red-500" : ""
-                        }`}
-                        placeholder="Digite aqui..."
-                      />
-                      {errors.signature && (
-                        <p className="text-red-500 text-sm">
-                          {errors.signature.message}
-                        </p>
-                      )}
-                    </div>
-                  </div>
                 </div>
               </div>
 
-              {/* Botões */}
               <div className=" flex flex-row items-center gap-5 ">
                 <Button
                   type="submit"

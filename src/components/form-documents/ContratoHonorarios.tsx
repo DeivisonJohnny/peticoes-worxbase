@@ -8,7 +8,6 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import Util from "@/utils/Util";
 import { Divider } from "antd";
-import { Textarea } from "../ui/textarea";
 
 const FeeAgreementSchema = yup.object({
   clientFullName: yup

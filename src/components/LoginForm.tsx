@@ -11,8 +11,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
 import Image from "next/image";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { useRouter } from "next/router";
+import Api from "@/api";
+import { toast } from "sonner";
+import { AxiosError } from "axios";
 
 const schema = yup.object().shape({
   email: yup
@@ -29,6 +32,7 @@ type FormData = yup.InferType<typeof schema>;
 
 export default function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsloading] = useState(false);
 
   const router = useRouter();
 
@@ -42,8 +46,26 @@ export default function LoginForm() {
     reValidateMode: "onChange",
   });
 
-  const onSubmit = (data: FormData) => {
-    console.log("Login data:", data);
+  const onSubmit = async (data: FormData) => {
+    try {
+      setIsloading(true);
+      const { status } = await Api.post("/auth/login", data);
+      if (status == 201) {
+        toast.success("Login realizado");
+        router.replace("/dashboard");
+      }
+    } catch (error: unknown) {
+      const axiosError = error as AxiosError;
+      console.log("🚀 ~ onSubmit ~ error:", axiosError);
+      toast.error(
+        `Erro de autenticação: ${
+          (axiosError.response?.data as { message?: string })?.message ??
+          "Ocorreu um erro inesperado"
+        }`
+      );
+    } finally {
+      setIsloading(false);
+    }
   };
 
   return (
@@ -131,10 +153,15 @@ export default function LoginForm() {
 
           <Button
             type="submit"
-            className="w-full bg-[#529FF6] font-bold hover:bg-blue-700 text-white py-4 sm:py-5 text-base lg:text-sm md:text-[14px] sm:text-[13px] rounded-[8px]"
-            onClick={() => router.replace("/dashboard")}
+            className="w-full bg-[#529FF6] font-bold hover:bg-blue-700 text-white py-4 sm:py-5 text-base lg:text-sm md:text-[14px] sm:text-[13px] rounded-[8px] cursor-pointer "
           >
-            Entrar
+            {isLoading ? (
+              <>
+                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+              </>
+            ) : (
+              "Entrar"
+            )}
           </Button>
 
           <div className="text-center pt-4 flex flex-col gap-2">
