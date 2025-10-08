@@ -60,6 +60,7 @@ type FormData = yup.InferType<typeof schema>;
 
 export default function RegisterOrUpdateClient() {
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingUpdate, setIsLoadingUpdate] = useState(false);
 
   const router = useRouter();
 
@@ -114,7 +115,7 @@ export default function RegisterOrUpdateClient() {
     }
 
     const fetchClient = async () => {
-      setIsLoading(true);
+      setIsLoadingUpdate(true);
       try {
         const client: ClientType = await Api.get(`/clients/${id}`);
         setValue("name", client.name || "");
@@ -127,7 +128,8 @@ export default function RegisterOrUpdateClient() {
         console.log("🚀 ~ fetchClient ~ error:", error);
         toast.error(`Erro ao buscar dados do cliente: ${apiError.message}`);
       } finally {
-        setIsLoading(false);
+        setIsLoadingUpdate(true);
+        false;
       }
     };
 
@@ -136,7 +138,7 @@ export default function RegisterOrUpdateClient() {
     }
   }, [id, isNew, setValue]);
 
-  if (isLoading) {
+  if (isLoadingUpdate) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <SpinLoader />
