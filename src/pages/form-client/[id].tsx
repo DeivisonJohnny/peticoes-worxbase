@@ -128,8 +128,7 @@ export default function RegisterOrUpdateClient() {
         console.log("🚀 ~ fetchClient ~ error:", error);
         toast.error(`Erro ao buscar dados do cliente: ${apiError.message}`);
       } finally {
-        setIsLoadingUpdate(true);
-        false;
+        setIsLoadingUpdate(false);
       }
     };
 
