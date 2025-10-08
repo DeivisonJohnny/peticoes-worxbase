@@ -1,5 +1,12 @@
-import axios from "axios";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import axios, { AxiosError } from "axios";
 import { toast } from "sonner";
+
+export interface ApiErrorResponse {
+  message: string;
+  status?: number;
+  data?: any;
+}
 
 const Api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_BASE_URL_API,
@@ -11,10 +18,12 @@ const Api = axios.create({
 });
 
 Api.interceptors.response.use(
-  (response) => response,
-  (error) => {
+  (response) => {
+    return response.data;
+  },
+  (error: AxiosError) => {
     if (error.response) {
-      const { status } = error.response;
+      const { status, data } = error.response;
 
       if (status === 401) {
         document.cookie =
@@ -29,15 +38,26 @@ Api.interceptors.response.use(
           );
 
           if (!isPublicPath) {
-            toast.error(`Erro de autenticação: ${error.response.data.message}`);
+            toast.error(`Sessão expirada! Faça o login novamente.`);
             console.warn("Sessão expirada. Redirecionando para login...");
-            window.location.href = "/auth/login";
+            // window.location.href = "/auth/login";
           }
         }
       }
+
+      const simplifiedError: ApiErrorResponse = {
+        message: (data as any)?.message || error.message,
+        status: status,
+        data: data,
+      };
+
+      return Promise.reject(simplifiedError);
     }
 
-    return Promise.reject(error);
+    const networkError: ApiErrorResponse = {
+      message: error.message || "Ocorreu um erro de rede.",
+    };
+    return Promise.reject(networkError);
   }
 );
 

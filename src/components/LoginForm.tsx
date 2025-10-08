@@ -13,9 +13,8 @@ import Link from "next/link";
 import Image from "next/image";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { useRouter } from "next/router";
-import Api from "@/api";
+import Api, { ApiErrorResponse } from "@/api";
 import { toast } from "sonner";
-import { AxiosError } from "axios";
 
 const schema = yup.object().shape({
   email: yup
@@ -47,22 +46,19 @@ export default function LoginForm() {
   });
 
   const onSubmit = async (data: FormData) => {
+    setIsloading(true);
     try {
-      setIsloading(true);
-      const { status } = await Api.post("/auth/login", data);
-      if (status == 201) {
-        toast.success("Login realizado");
+      await Api.post("/auth/login", data);
+
+      toast.success("Login realizado com sucesso!");
+      setTimeout(() => {
         router.replace("/dashboard");
-      }
-    } catch (error: unknown) {
-      const axiosError = error as AxiosError;
-      console.log("🚀 ~ onSubmit ~ error:", axiosError);
-      toast.error(
-        `Erro de autenticação: ${
-          (axiosError.response?.data as { message?: string })?.message ??
-          "Ocorreu um erro inesperado"
-        }`
-      );
+      }, 2000);
+    } catch (error) {
+      const apiError = error as ApiErrorResponse;
+
+      console.error("🚀 ~ Erro de autenticação:", apiError);
+      toast.error(`Erro de autenticação: ${apiError.message}`);
     } finally {
       setIsloading(false);
     }

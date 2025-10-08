@@ -137,6 +137,10 @@ body {
   }
 }
 
+button {
+  cursor: pointer;
+}
+
 .scroll-list-clients {
   overflow-y: auto;
   padding-right: 8px;

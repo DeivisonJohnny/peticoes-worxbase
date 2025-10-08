@@ -8,6 +8,11 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Util from "@/utils/Util";
+import Api, { ApiErrorResponse } from "@/api";
+import { useState } from "react";
+import { Loader2 } from "lucide-react";
+import { toast } from "sonner";
+import { ClientType } from "../dashboard";
 
 function formatPhone(value: string) {
   value = value.replace(/\D/g, "");
@@ -19,7 +24,7 @@ function formatPhone(value: string) {
 }
 
 const schema = yup.object({
-  fullname: yup
+  name: yup
     .string()
     .min(3, "O campo deve ter ao menos 3 caracteres")
     .required("O nome completo é obrigatório"),
@@ -52,6 +57,8 @@ const schema = yup.object({
 type FormData = yup.InferType<typeof schema>;
 
 export default function Dashboard() {
+  const [isLoading, setIsLoading] = useState(false);
+
   const {
     register,
     handleSubmit,
@@ -62,10 +69,27 @@ export default function Dashboard() {
     mode: "onChange",
   });
 
-  const onSubmit = (data: FormData) => {
-    console.log("Cliente cadastrado:", data);
-  };
+  const onSubmit = async (data: FormData) => {
+    setIsLoading(true);
+    try {
+      const isCnpj = data.cpforcnpj.length > 14;
+      const { cpforcnpj, ...rest } = data;
+      const bodySend = {
+        ...rest,
+        ...(isCnpj ? { cnpj: cpforcnpj } : { cpf: cpforcnpj }),
+      };
 
+      const newClient: ClientType = await Api.post("/clients", bodySend);
+
+      toast.success(`Cliente ${newClient.name} cadastrado com sucesso!`);
+    } catch (error) {
+      const apiError = error as ApiErrorResponse;
+      console.error("🚀 ~ Erro ao cadastrar cliente:", apiError);
+      toast.error(`Erro ao cadastrar: ${apiError.message}`);
+    } finally {
+      setIsLoading(false);
+    }
+  };
   const errorClass =
     "border-[1px] focus-visible:border-[red] focus-visible:shadow-[0_0_15px_-4px_#ff0000a4]";
 
@@ -84,23 +108,21 @@ export default function Dashboard() {
             onSubmit={handleSubmit(onSubmit)}
           >
             <div className="space-y-2">
-              <Label htmlFor="fullname" className="font-medium text-[#1C3552]">
+              <Label htmlFor="name" className="font-medium text-[#1C3552]">
                 Nome completo do cliente
               </Label>
               <Input
-                id="fullname"
-                {...register("fullname")}
+                id="name"
+                {...register("name")}
                 className={` focus-visible:ring-[0px] rounded-[8px] w-full p-4 placeholder:text-[#CCCCCC] placeholder:italic ${
-                  errors.fullname
+                  errors.name
                     ? errorClass
                     : " border-[1px] focus-visible:border-[#00a2ffa3] focus-visible:shadow-[0_0_15px_-4px_#0066ffa2]"
                 }`}
                 placeholder="Digite aqui..."
               />
-              {errors.fullname && (
-                <p className="text-red-500 text-sm">
-                  {errors.fullname.message}
-                </p>
+              {errors.name && (
+                <p className="text-red-500 text-sm">{errors.name.message}</p>
               )}
             </div>
 
@@ -196,9 +218,15 @@ export default function Dashboard() {
 
             <Button
               type="submit"
-              className="w-fit bg-[#529FF6] font-medium text-[16px] hover:bg-blue-700 text-white py-4  focus-visible:ring-[0px] rounded-[8px] mt-[20px]"
+              className="w-fit bg-[#529FF6] font-medium text-[16px] hover:bg-blue-700 text-white   focus-visible:ring-[0px] rounded-[8px] mt-[20px] min-w-[156px] min-h-[36px]  "
             >
-              Cadastrar cliente
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                </>
+              ) : (
+                "Cadastrar cliente"
+              )}
             </Button>
           </form>
         </CardContent>

@@ -21,8 +21,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useRouter } from "next/router";
-import Api from "@/api";
+import Api, { ApiErrorResponse } from "@/api";
 import SpinLoader from "@/components/SpinLoader";
+import { toast } from "sonner";
 
 const documentTypes = [
   { id: "procuracao-inss", label: "Procuração INSS", checked: true },
@@ -121,13 +122,16 @@ export default function Dashboard() {
       )
     );
   };
+
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const { data } = await Api.get("/clients");
+        const data: ClientType[] = await Api.get("/clients");
         setClients(data);
       } catch (error) {
-        console.error("Erro capturado no componente:", error);
+        const apiError = error as ApiErrorResponse;
+        console.error("Erro capturado no componente:", apiError);
+        toast.error(`Erro inesperado: ${apiError.message}`);
       } finally {
         setIsLoading(false);
       }
@@ -173,11 +177,14 @@ export default function Dashboard() {
               </Button>
             </div>
             <div className="space-y-1 flex  flex-col gap-2">
-              <Button className="text-[16px] text-[#529FF6] w-full border-2 border-[#529FF6] mb-2 rounded-[8px] bg-transparent flex items-center justify-center hover:bg-blue-700  hover:text-white hover:border-blue-600 cursor-pointer ">
+              <Button
+                className="text-[16px] text-[#529FF6] w-full border-2 border-[#529FF6] mb-2 rounded-[8px] bg-transparent flex items-center justify-center hover:bg-blue-700  hover:text-white hover:border-blue-600 cursor-pointer "
+                onClick={() => router.push("/register-client")}
+              >
                 Adicionar novo cliente <Plus width={25} height={25} />
               </Button>
 
-              <div className=" flex flex-col w-full gap-2 h-[300px] overflow-y-scroll scroll-list-clients  ">
+              <div className=" flex flex-col w-full gap-2 h-[300px] overflow-y-scroll scroll-list-clients  border-b-1 border-[#d6d6d6] pb-2 ">
                 {clients.map((client, index) => (
                   <Button
                     key={index}
