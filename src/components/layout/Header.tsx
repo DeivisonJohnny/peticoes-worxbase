@@ -9,7 +9,7 @@ type MenuItem = { label: string; page: string };
 
 const menuItems: MenuItem[] = [
   { label: "Home", page: "/dashboard" },
-  { label: "Cadastrar clientes", page: "/dashboard" },
+  { label: "Cadastrar clientes", page: "/form-client/new" },
   { label: "Meus clientes", page: "/dashboard" },
   { label: "Cadastrar", page: "/auth/signup" },
   { label: "Login", page: "/auth/login" },

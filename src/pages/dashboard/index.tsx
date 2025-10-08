@@ -215,7 +215,12 @@ export default function Dashboard() {
                           align="end"
                           className=" rounded-[12px] rounded-tr-none"
                         >
-                          <DropdownMenuItem className=" text-[#1C3552] text-[14px] cursor-pointer ">
+                          <DropdownMenuItem
+                            className=" text-[#1C3552] text-[14px] cursor-pointer "
+                            onClick={() =>
+                              router.push(`/form-client/${client.id}`)
+                            }
+                          >
                             Editar dados
                           </DropdownMenuItem>
                           <Divider className="p-0 m-0" style={{ margin: 0 }} />
