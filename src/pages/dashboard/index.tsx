@@ -12,6 +12,7 @@ import {
   EllipsisVertical,
   Plus,
   Check,
+  Loader2,
 } from "lucide-react";
 import { Divider } from "antd";
 import {
@@ -24,6 +25,7 @@ import { useRouter } from "next/router";
 import Api, { ApiErrorResponse } from "@/api";
 import SpinLoader from "@/components/SpinLoader";
 import { toast } from "sonner";
+import { PopupCustom } from "@/components/PopupConfirm";
 
 const documentTypes = [
   { id: "procuracao-inss", label: "Procuração INSS", checked: true },
@@ -105,7 +107,9 @@ export default function Dashboard() {
   const [documents, setDocuments] = useState(documentTypes);
   const [petitions, setPetitions] = useState(petitionModels);
   const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingDelete, setIsLoadingDelete] = useState(false);
   const [clients, setClients] = useState<ClientType[]>([]);
+  const [showPopup, setShowPopup] = useState(false);
 
   const router = useRouter();
 
@@ -123,20 +127,42 @@ export default function Dashboard() {
     );
   };
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const data: ClientType[] = await Api.get("/clients");
-        setClients(data);
-      } catch (error) {
-        const apiError = error as ApiErrorResponse;
-        console.error("Erro capturado no componente:", apiError);
-        toast.error(`Erro inesperado: ${apiError.message}`);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  const fetchData = async () => {
+    try {
+      const data: ClientType[] = await Api.get("/clients");
+      setClients(data);
+    } catch (error) {
+      const apiError = error as ApiErrorResponse;
+      console.error("Erro capturado no componente:", apiError);
+      toast.error(`Erro inesperado: ${apiError.message}`);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
+  const onDeleteCliente = async () => {
+    setIsLoadingDelete(true);
+    if (!selectedClient?.id) {
+      toast.warning("Selecione o cliente antes de deletar");
+      return;
+    }
+
+    try {
+      await Api.delete(`/clients/${selectedClient.id}`);
+
+      toast.success(`Cliente deletado com sucesso`);
+    } catch (error) {
+      const apiError = error as ApiErrorResponse;
+
+      toast.error(`Erro inesperado: ${apiError.message}`);
+    } finally {
+      fetchData();
+      setShowPopup(false);
+      setIsLoadingDelete(false);
+    }
+  };
+
+  useEffect(() => {
     fetchData();
   }, []);
 
@@ -150,6 +176,44 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-[calc(100vh_-_70px)] p-2 w-[100%] ">
+      <PopupCustom
+        open={showPopup}
+        onOpenChange={() => setShowPopup((prev) => !prev)}
+      >
+        <div className=" flex flex-col items-center gap-3 ">
+          <p className="text-black  ">
+            Deseja realmente excluir o cliente{" "}
+            <strong className="text-[#1C3552]"> {selectedClient?.name}</strong>
+          </p>
+
+          <p className=" text-gray-400 text-[14px] ">
+            Todos os documentos gerados com ele serão perdidos
+          </p>
+        </div>
+
+        <div className="flex flex-row items-center gap-6   justify-end ">
+          <Button
+            className=" bg-blue-400 hover:bg-blue-700 duration-300 "
+            onClick={() => setShowPopup((prev) => !prev)}
+          >
+            Cancelar
+          </Button>
+          <Button
+            variant={"destructive"}
+            className="hover:bg-black  "
+            onClick={onDeleteCliente}
+          >
+            {isLoadingDelete ? (
+              <>
+                <Loader2 className="  h-5 w-5 animate-spin" />
+              </>
+            ) : (
+              "Excluir"
+            )}
+          </Button>
+        </div>
+      </PopupCustom>
+
       <div className=" max-w-[1440px] w-full mx-auto">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 w-full">
           <Card className="p-6 border-none shadow-none gap-5 ">
@@ -186,7 +250,7 @@ export default function Dashboard() {
 
               <div className=" flex flex-col w-full gap-2 h-[300px] overflow-y-scroll scroll-list-clients  border-b-1 border-[#d6d6d6] pb-2 ">
                 {clients.map((client, index) => (
-                  <Button
+                  <div
                     key={index}
                     className={` flex items-center justify-between py-2 px-3 hover:bg-gray-50  cursor-pointer bg-white  border-1 rounded-[8px] shadow-[0px_2px_4px_#0000001A] min-h-[42px]  ${
                       selectedClient?.id === client.id
@@ -206,9 +270,13 @@ export default function Dashboard() {
                         Gerar documento
                         <ArrowRight width={12} />
                       </span>
-                      <DropdownMenu>
+                      <DropdownMenu
+                        onOpenChange={(isOpen) => {
+                          if (isOpen) setSelectedClient(client);
+                        }}
+                      >
                         <DropdownMenuTrigger className="cursor-pointer">
-                          <EllipsisVertical className="w-4 h-4 text-blue-600 " />
+                          <EllipsisVertical className="w-4 h-4 text-blue-600  " />
                         </DropdownMenuTrigger>
                         <DropdownMenuContent
                           side="bottom"
@@ -233,13 +301,18 @@ export default function Dashboard() {
                             Ver histórico
                           </DropdownMenuItem>
                           <Divider className="p-0 m-0" style={{ margin: 0 }} />
-                          <DropdownMenuItem className=" text-[#1C3552] text-[14px]cursor-pointer ">
+                          <DropdownMenuItem
+                            className=" text-[#1C3552] text-[14px] cursor-pointer "
+                            onClick={() => {
+                              setShowPopup((prev) => !prev);
+                            }}
+                          >
                             Excluir cliente
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </div>
-                  </Button>
+                  </div>
                 ))}
               </div>
             </div>
