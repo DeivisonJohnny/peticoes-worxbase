@@ -26,6 +26,14 @@ const MAPPED_PAGES: MappedPagesType[] = [
 export function DynamicBreadcrumb() {
   const pathname = usePathname();
 
+  if (
+    pathname === "/" ||
+    pathname.startsWith("/auth") ||
+    pathname.startsWith("/public")
+  ) {
+    return null;
+  }
+
   const segments = pathname
     ? pathname.split("/").filter((segment) => segment !== "")
     : [];
@@ -64,18 +72,6 @@ export function DynamicBreadcrumb() {
       isLast: index === segments.length - 1,
     };
   });
-
-  if (segments.length === 0 || pathname === "/") {
-    return (
-      <Breadcrumb>
-        <BreadcrumbList>
-          <BreadcrumbItem className="text-[#9A9A9A] font-light text-[14px]">
-            <BreadcrumbPage>Home</BreadcrumbPage>
-          </BreadcrumbItem>
-        </BreadcrumbList>
-      </Breadcrumb>
-    );
-  }
 
   return (
     <div className="max-w-[70%] m-auto mt-[20px]">
