@@ -1,6 +1,5 @@
 "use client";
 
-import { usePathname } from "next/navigation";
 import { Fragment } from "react";
 import {
   Breadcrumb,
@@ -9,6 +8,7 @@ import {
   BreadcrumbSeparator,
   BreadcrumbList,
 } from "@/components/ui/breadcrumb";
+import { useRouter } from "next/router";
 
 type MappedPagesType = {
   path: string;
@@ -23,7 +23,7 @@ const MAPPED_PAGES: MappedPagesType[] = [
 ];
 
 export function DynamicBreadcrumb() {
-  const pathname = usePathname();
+  const { pathname } = useRouter();
 
   if (!pathname) {
     return null;
@@ -77,7 +77,13 @@ export function DynamicBreadcrumb() {
   });
 
   return (
-    <div className="max-w-[70%] m-auto mt-[20px]">
+    <div
+      className={`max-w-[70%] ${
+        pathname.startsWith("/dashboard")
+          ? "max-w-[1340px] pl-[24px]"
+          : "max-w-[70%] "
+      } m-auto mt-[20px]`}
+    >
       <Breadcrumb>
         <BreadcrumbList>
           <BreadcrumbItem className="text-[#9A9A9A] font-light text-[14px]">
