@@ -235,10 +235,6 @@ export default function Documents() {
 
   return (
     <main className=" max-w-[1200px] w-full mx-auto pb-[100px] px-5 ">
-      <div className="text-[#9A9A9A] font-light text-[14px] px-0  py-6  ">
-        Cadastro de clientes &gt; Documentos
-      </div>
-
       <div className="w-full flex flex-col justify-center items-center gap-[15px] border-1 border-[#DFDFDF] rounded-[8px] py-[8px] px-[34px] mb-[25px] ">
         <p className=" text-[14px] text-[#529FF6] ">Procuração INSS</p>
         <div className="flex flex-row items-center gap-[10px]">

@@ -55,9 +55,6 @@ export default function HistoryClient() {
     <div className="min-h-screen p-6 w-[100%] ">
       <div className=" max-w-[1440px] w-full mx-auto">
         <Card className="p-6 border-none shadow-none gap-5 ">
-          <CardHeader className="text-[#9A9A9A] font-light text-[14px] px-0">
-            Cadastro de clientes &gt; Historico
-          </CardHeader>
           <h2 className="text-[24px] font-medium text-[#1C3552]">Historico</h2>
           <div className="flex gap-2">
             <div className="relative flex-1 max-w-[400px] ">
