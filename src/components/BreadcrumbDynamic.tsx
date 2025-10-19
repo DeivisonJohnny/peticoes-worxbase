@@ -8,7 +8,6 @@ import {
   BreadcrumbLink,
   BreadcrumbSeparator,
   BreadcrumbList,
-  BreadcrumbPage,
 } from "@/components/ui/breadcrumb";
 
 type MappedPagesType = {
@@ -25,6 +24,10 @@ const MAPPED_PAGES: MappedPagesType[] = [
 
 export function DynamicBreadcrumb() {
   const pathname = usePathname();
+
+  if (!pathname) {
+    return null;
+  }
 
   if (
     pathname === "/" ||
