@@ -219,9 +219,6 @@ export default function Dashboard() {
       <div className=" max-w-[1440px] w-full mx-auto">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 w-full">
           <Card className="p-6 border-none shadow-none gap-5 ">
-            <CardHeader className="text-[#9A9A9A] font-light text-[14px] px-0">
-              Cadastro de clientes &gt; Meus clientes
-            </CardHeader>
             <h2 className="text-[24px] font-medium text-[#1C3552]">
               Meus clientes
             </h2>
