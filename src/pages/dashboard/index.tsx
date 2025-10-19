@@ -265,7 +265,7 @@ export default function Dashboard() {
                       <span
                         className=" text-[#13529C] bg-[#529FF626] px-2 py-[0px] text-[14px] rounded-[50px] font-medium flex flex-row items-center flex-nowrap gap-[10px] cursor-pointer "
                         onClick={() =>
-                          generatedDocument("cmgvjqs500003lh11mqxwpmb2")
+                          generatedDocument("cmgy4q0wg0001qq116jsymyci")
                         }
                       >
                         Gerar documento
