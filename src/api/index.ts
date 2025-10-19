@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import axios, { AxiosError } from "axios";
+import axios, { AxiosError, AxiosResponse } from "axios";
 import { toast } from "sonner";
 
 export interface ApiErrorResponse {
@@ -18,7 +18,13 @@ const Api = axios.create({
 });
 
 Api.interceptors.response.use(
-  (response) => {
+  (response: AxiosResponse) => {
+    if (
+      (response.headers["content-type"] as string).includes("application/pdf")
+    ) {
+      return response;
+    }
+
     return response.data;
   },
   (error: AxiosError) => {

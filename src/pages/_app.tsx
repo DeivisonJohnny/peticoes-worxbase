@@ -1,5 +1,6 @@
 import Layout from "@/components/layout";
 import { Toaster } from "@/components/ui/sonner";
+import GenerateDocumentProvider from "@/contexts/GenerateContext";
 import "@/styles/globals.css";
 import { AlertCircle, CheckCircle } from "lucide-react";
 import type { AppProps } from "next/app";
@@ -26,8 +27,9 @@ export default function App({ Component, pageProps }: AppProps) {
           }}
           style={{ top: "80px", right: "30px", position: "fixed" }}
         />
-
-        <Component {...pageProps} />
+        <GenerateDocumentProvider>
+          <Component {...pageProps} />
+        </GenerateDocumentProvider>
       </Layout>
     </>
   );

@@ -26,6 +26,7 @@ import Api, { ApiErrorResponse } from "@/api";
 import SpinLoader from "@/components/SpinLoader";
 import { toast } from "sonner";
 import { PopupCustom } from "@/components/PopupConfirm";
+import { useGenerateDocument } from "@/contexts/GenerateContext";
 
 const documentTypes = [
   { id: "procuracao-inss", label: "Procuração INSS", checked: true },
@@ -110,6 +111,7 @@ export default function Dashboard() {
   const [isLoadingDelete, setIsLoadingDelete] = useState(false);
   const [clients, setClients] = useState<ClientType[]>([]);
   const [showPopup, setShowPopup] = useState(false);
+  const { generatedDocument } = useGenerateDocument();
 
   const router = useRouter();
 
@@ -265,7 +267,9 @@ export default function Dashboard() {
                     <div className="flex items-center gap-2">
                       <span
                         className=" text-[#13529C] bg-[#529FF626] px-2 py-[0px] text-[14px] rounded-[50px] font-medium flex flex-row items-center flex-nowrap gap-[10px] cursor-pointer "
-                        onClick={() => router.push("/documents")}
+                        onClick={() =>
+                          generatedDocument("cmgvjqs500003lh11mqxwpmb2")
+                        }
                       >
                         Gerar documento
                         <ArrowRight width={12} />
@@ -285,9 +289,7 @@ export default function Dashboard() {
                         >
                           <DropdownMenuItem
                             className=" text-[#1C3552] text-[14px] cursor-pointer "
-                            onClick={() =>
-                              router.push(`/form-client/${client.id}`)
-                            }
+                            onClick={() => router.push(`/clients/${client.id}`)}
                           >
                             Editar dados
                           </DropdownMenuItem>
