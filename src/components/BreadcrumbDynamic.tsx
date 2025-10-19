@@ -62,6 +62,10 @@ export function DynamicBreadcrumb() {
         case "new":
           return "Novo Cadastro";
         default:
+          if (segment.startsWith("[") && segment.endsWith("]")) {
+            return "Editar";
+          }
+
           return (
             segment.charAt(0).toUpperCase() +
             segment.slice(1).replace(/-/g, " ")
@@ -86,16 +90,20 @@ export function DynamicBreadcrumb() {
     >
       <Breadcrumb>
         <BreadcrumbList>
-          <BreadcrumbItem className="text-[#9A9A9A] font-light text-[14px]">
-            <BreadcrumbLink href="/dashboard">Home</BreadcrumbLink>
-          </BreadcrumbItem>
+          {!pathname.startsWith("/dashboard") ? (
+            <BreadcrumbItem className="text-[#9A9A9A] font-light text-[14px] cursor-pointer">
+              <BreadcrumbLink href="/dashboard">Home</BreadcrumbLink>
+            </BreadcrumbItem>
+          ) : null}
 
-          {breadcrumbItems.length > 0 && <BreadcrumbSeparator />}
+          {breadcrumbItems.length > 0 && !pathname.startsWith("/dashboard") ? (
+            <BreadcrumbSeparator />
+          ) : null}
 
           {breadcrumbItems.map((item) => (
             <Fragment key={item.path}>
               <BreadcrumbItem
-                className={`font-light text-[14px] ${
+                className={`font-light text-[14px] cursor-pointer ${
                   item.isLast ? "text-gray-700" : "text-[#9A9A9A]"
                 }`}
               >
