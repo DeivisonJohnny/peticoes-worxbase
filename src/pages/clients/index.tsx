@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
@@ -13,57 +13,75 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-const clientsData = [
-  {
-    id: "client-1",
-    name: "João Silva",
-    email: "joao.silva@email.com",
-    phone: "(11) 98765-4321",
-    status: "Ativo",
-    checked: false,
-  },
-  {
-    id: "client-2",
-    name: "Maria Santos",
-    email: "maria.santos@email.com",
-    phone: "(21) 97654-3210",
-    status: "Ativo",
-    checked: false,
-  },
-  {
-    id: "client-3",
-    name: "Pedro Oliveira",
-    email: "pedro.oliveira@email.com",
-    phone: "(31) 96543-2109",
-    status: "Pendente",
-    checked: false,
-  },
-  {
-    id: "client-4",
-    name: "Ana Costa",
-    email: "ana.costa@email.com",
-    phone: "(41) 95432-1098",
-    status: "Ativo",
-    checked: false,
-  },
-  {
-    id: "client-5",
-    name: "Carlos Ferreira",
-    email: "carlos.ferreira@email.com",
-    phone: "(51) 94321-0987",
-    status: "Inativo",
-    checked: false,
-  },
-];
+interface ClientType {
+  id: string;
+  name: string;
+  cpf: string | null;
+  cnpj: string | null;
+  address: string | null;
+  phone: string | null;
+  dateOfBirth: string | null;
+  rg: string | null;
+  maritalStatus: string | null;
+  birthPlace: string | null;
+  rgIssuer: string | null;
+  nickname: string | null;
+  nationality: string | null;
+  motherName: string | null;
+  occupation: string | null;
+  email: string | null;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+  checked?: boolean;
+}
+
+import Api, { ApiErrorResponse } from "@/api";
+import { toast } from "sonner";
+import SpinLoader from "@/components/SpinLoader";
 
 export default function Clients() {
-  const [clients, setClients] = useState(clientsData);
+  const [clients, setClients] = useState<ClientType[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   const toggleClient = (id: string, checked: boolean) => {
     setClients((prev) =>
       prev.map((client) => (client.id === id ? { ...client, checked } : client))
     );
   };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const fetchData = async () => {
+    setIsLoading(true);
+    try {
+      const data: ClientType[] = await Api.get("/clients");
+
+      const clientsWithCheckbox = data.map((client) => ({
+        ...client,
+        checked: false,
+      }));
+
+      setClients(clientsWithCheckbox);
+    } catch (error) {
+      const apiError = error as ApiErrorResponse;
+      console.error("Erro capturado no componente:", apiError);
+      toast.error(`Erro inesperado: ${apiError.message}`);
+      setClients([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <SpinLoader />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen p-0 w-[100%]">
@@ -110,22 +128,21 @@ export default function Clients() {
                       {client.name}
                     </label>
                     <div className="flex gap-3 text-[14px] text-[#9A9A9A]">
-                      <span>{client.email}</span>
-                      <span>{client.phone}</span>
+                      {client.cpf && <span>CPF: **{client.cpf}**</span>}
+                      {client.email && <span>{client.email}</span>}
+                      {client.address && <span>{client.address}</span>}
                     </div>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
                   <span
                     className={`px-[12px] py-[2px] text-[14px] rounded-[50px] font-medium ${
-                      client.status === "Ativo"
+                      client.isActive
                         ? "text-[#13529C] bg-[#529FF626]"
-                        : client.status === "Pendente"
-                        ? "text-[#E67E22] bg-[#FFF3E0]"
                         : "text-[#95A5A6] bg-[#EFEFEF]"
                     }`}
                   >
-                    {client.status}
+                    {client.isActive ? "Ativo" : "Inativo"}
                   </span>
                   <span className="text-[#13529C] bg-[#EFEFEF] px-[9px] py-[1px] text-[14px] rounded-[50px] font-medium flex flex-row items-center flex-nowrap gap-[5px]">
                     Ver detalhes <Eye width={16} color="#13529C" />
