@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
@@ -125,7 +125,7 @@ export type LastGenerated = {
       nationality: string | null;
       maritalStatus: string | null;
     };
-    document: Record<string, any>;
+    document: Record<string, unknown>;
   };
 };
 
@@ -175,7 +175,7 @@ export default function Dashboard() {
     }));
   };
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       const params = new URLSearchParams();
 
@@ -196,7 +196,7 @@ export default function Dashboard() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [filters.filterEmail, filters.filterName, filters.search]);
 
   const onDeleteCliente = async () => {
     setIsLoadingDelete(true);
@@ -220,7 +220,7 @@ export default function Dashboard() {
     }
   };
 
-  const fetchDocuments = async () => {
+  const fetchDocuments = useCallback(async () => {
     setIsDocumentLoading(true);
     try {
       if (selectedClient?.id) {
@@ -260,16 +260,15 @@ export default function Dashboard() {
     } finally {
       setIsDocumentLoading(false);
     }
-  };
+  }, [selectedClient?.id]);
 
   useEffect(() => {
     fetchData();
-  }, [filters.search, filters.filterName, filters.filterEmail]);
+  }, [fetchData]);
 
   useEffect(() => {
     fetchDocuments();
-    console.log(selectedDocument);
-  }, [selectedClient]);
+  }, [fetchDocuments, selectedClient]);
 
   const downloadDocuments = async () => {
     setIsDownloading(true);
@@ -311,8 +310,9 @@ export default function Dashboard() {
       window.URL.revokeObjectURL(url);
 
       toast.success("Arquivo ZIP baixado com sucesso!");
-    } catch (error: any) {
-      toast.error(error.message || "Erro ao baixar o arquivo ZIP");
+    } catch (error) {
+      const apiError = error as ApiErrorResponse;
+      toast.error(apiError.message || "Erro ao baixar o arquivo ZIP");
     } finally {
       setIsDownloading(false);
     }
@@ -447,9 +447,9 @@ export default function Dashboard() {
 
               <div className=" flex flex-col w-full gap-2 h-[300px] overflow-y-scroll scroll-list-clients  border-b-1 border-[#d6d6d6] pb-2 ">
                 {clients.length > 0 &&
-                  clients?.map((client, index) => (
+                  clients?.map((client) => (
                     <div
-                      key={index}
+                      key={client.id}
                       className={` flex items-center justify-between py-2 px-3 hover:bg-gray-50  cursor-pointer bg-white  border-1 rounded-[8px] shadow-[0px_2px_4px_#0000001A] min-h-[42px]  ${
                         selectedClient?.id === client.id
                           ? "border-[royalblue] shadow-[#4169e183]"
@@ -600,7 +600,7 @@ export default function Dashboard() {
                       </>
                     ) : (
                       selectedDocument.length > 0 &&
-                      selectedDocument.map((doc, index) => (
+                      selectedDocument.map((doc) => (
                         <div
                           key={doc.templateId}
                           className={`flex items-center space-x-2 bg-[#F5F5F5] rounded-[8px] gap-[8px] pl-[10px]  ${

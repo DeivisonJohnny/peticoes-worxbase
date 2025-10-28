@@ -87,6 +87,7 @@ export default function TermoRepresentacaoForm({
   client,
   idForm,
 }: TermoRepresentacaoFormProps) {
+  console.log("🚀 ~ TermoRepresentacaoForm ~ idForm:", idForm);
   const {
     register,
     handleSubmit,
