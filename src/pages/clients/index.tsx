@@ -57,7 +57,7 @@ export default function Clients() {
   const fetchData = async () => {
     setIsLoading(true);
     try {
-      const data: ClientType[] = await Api.get("/clients");
+      const { data }: { data: ClientType[] } = await Api.get("/clients");
 
       const clientsWithCheckbox = data.map((client) => ({
         ...client,
