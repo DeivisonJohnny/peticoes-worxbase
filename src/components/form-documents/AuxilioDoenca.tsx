@@ -9,6 +9,8 @@ import { Button } from "@/components/ui/button";
 import Util from "@/utils/Util";
 import { Divider } from "antd";
 import { Textarea } from "../ui/textarea";
+import { ClientType, Documento } from "@/pages/dashboard";
+import { useEffect } from "react";
 
 const LoasDeficienciaSchema = yup.object({
   jurisdiction: yup.string().required("O foro é obrigatório"),
@@ -75,7 +77,13 @@ const LoasDeficienciaSchema = yup.object({
 type BpcLoasFormData = yup.InferType<typeof LoasDeficienciaSchema>;
 type BpcLoasResolver = Resolver<BpcLoasFormData>;
 
-export default function AuxilioDoenca() {
+interface AuxilioDoencaProps {
+  client?: ClientType | null;
+  idForm?: string;
+  documents?: Documento[];
+}
+
+export default function AuxilioDoenca({ client, idForm }: AuxilioDoencaProps) {
   const {
     register,
     handleSubmit,
@@ -86,8 +94,20 @@ export default function AuxilioDoenca() {
     mode: "onChange",
   });
 
+  useEffect(() => {
+    if (client) {
+      setValue("fullName", client.name || "");
+      setValue("nationality", client.nationality || "");
+      setValue("cpf", client.cpf || "");
+      setValue("rg", client.rg || "");
+      setValue("occupation", client.occupation || "");
+      // O endereço do cliente é uma string única, preenchendo o campo de rua.
+      setValue("street", client.address || "");
+    }
+  }, [client, setValue]);
+
   const onSubmit = (data: BpcLoasFormData) => {
-    console.log(data);
+    console.log({ templateId: idForm, ...data });
   };
 
   const handleCpfChange = (e: React.ChangeEvent<HTMLInputElement>) => {

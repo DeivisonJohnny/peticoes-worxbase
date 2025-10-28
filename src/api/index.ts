@@ -19,14 +19,19 @@ const Api = axios.create({
 
 Api.interceptors.response.use(
   (response: AxiosResponse) => {
+    const contentType = response.headers["content-type"];
+
     if (
-      (response.headers["content-type"] as string).includes("application/pdf")
+      contentType?.includes("application/pdf") ||
+      contentType?.includes("application/zip") ||
+      response.request?.responseType === "blob"
     ) {
       return response;
     }
 
     return response.data;
   },
+
   (error: AxiosError) => {
     if (error.response) {
       const { status, data } = error.response;

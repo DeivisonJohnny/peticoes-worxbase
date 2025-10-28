@@ -9,6 +9,8 @@ import { Button } from "@/components/ui/button";
 import Util from "@/utils/Util";
 import { Textarea } from "../ui/textarea";
 import { Divider } from "antd";
+import { ClientType, Documento } from "@/pages/dashboard";
+import { useEffect } from "react";
 
 const LoasDeficienciaSchema = yup.object({
   jurisdiction: yup.string().required("O foro é obrigatório"),
@@ -64,7 +66,16 @@ function formatPhone(value: string) {
   }
 }
 
-export default function LoasDeficiencia() {
+interface LoasDeficienciaProps {
+  client?: ClientType | null;
+  idForm?: string;
+  documents?: Documento[];
+}
+
+export default function LoasDeficiencia({
+  client,
+  idForm,
+}: LoasDeficienciaProps) {
   const {
     register,
     handleSubmit,
@@ -75,8 +86,25 @@ export default function LoasDeficiencia() {
     mode: "onChange",
   });
 
+  useEffect(() => {
+    if (client) {
+      setValue("fullName", client.name || "");
+      setValue("nationality", client.nationality || "");
+      setValue(
+        "birthDate",
+        client.dateOfBirth
+          ? new Date(client.dateOfBirth).toISOString().split("T")[0]
+          : ""
+      );
+      setValue("cpf", client.cpf || "");
+      setValue("phone", client.phone || "");
+      // O endereço do cliente é uma string única, preenchendo o campo de rua.
+      setValue("street", client.address || "");
+    }
+  }, [client, setValue]);
+
   const onSubmit = (data: BpcLoasFormData) => {
-    console.log(data);
+    console.log({ templateId: idForm, ...data });
   };
 
   const handleCpfChange = (e: React.ChangeEvent<HTMLInputElement>) => {

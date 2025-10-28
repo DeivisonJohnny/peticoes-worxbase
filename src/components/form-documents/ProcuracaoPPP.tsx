@@ -8,6 +8,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import Util from "@/utils/Util";
 import { Divider } from "antd";
+import { ClientType, Documento } from "@/pages/dashboard";
+import { useEffect } from "react";
 
 const PppPowerOfAttorneySchema = yup.object({
   grantorFullName: yup
@@ -34,7 +36,16 @@ type PppPowerOfAttorneyFormData = yup.InferType<
 >;
 type PppPowerOfAttorneyResolver = Resolver<PppPowerOfAttorneyFormData>;
 
-export default function PppPowerOfAttorneyForm() {
+interface PppPowerOfAttorneyFormProps {
+  client?: ClientType | null;
+  idForm?: string;
+  documents?: Documento[];
+}
+
+export default function PppPowerOfAttorneyForm({
+  client,
+  idForm,
+}: PppPowerOfAttorneyFormProps) {
   const {
     register,
     handleSubmit,
@@ -47,8 +58,18 @@ export default function PppPowerOfAttorneyForm() {
     mode: "onChange",
   });
 
+  useEffect(() => {
+    if (client) {
+      setValue("grantorFullName", client.name || "");
+      setValue("grantorNationality", client.nationality || "");
+      setValue("grantorCpf", client.cpf || "");
+      // O endereço do cliente é uma string única, preenchendo o campo de rua.
+      setValue("grantorStreet", client.address || "");
+    }
+  }, [client, setValue]);
+
   const onSubmit = (data: PppPowerOfAttorneyFormData) => {
-    console.log("Form data:", data);
+    console.log("Form data:", { templateId: idForm, ...data });
   };
 
   const handleCpfChange = (e: React.ChangeEvent<HTMLInputElement>) => {

@@ -8,6 +8,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "../ui/checkbox";
 import Util from "@/utils/Util";
+import { useEffect } from "react";
+import { ClientType, Documento } from "@/pages/dashboard";
 
 const termoRepresentacaoSchema = yup.object({
   representedName: yup
@@ -75,7 +77,16 @@ type TermoRepresentacaoFormData = yup.InferType<
 >;
 type TermoRepresentacaoResolver = Resolver<TermoRepresentacaoFormData>;
 
-export default function TermoRepresentacaoForm() {
+interface TermoRepresentacaoFormProps {
+  client?: ClientType | null;
+  idForm?: string;
+  documents?: Documento[];
+}
+
+export default function TermoRepresentacaoForm({
+  client,
+  idForm,
+}: TermoRepresentacaoFormProps) {
   const {
     register,
     handleSubmit,
@@ -117,6 +128,16 @@ export default function TermoRepresentacaoForm() {
       documentDate: "",
     },
   });
+
+  useEffect(() => {
+    if (client) {
+      setValue("representedName", client.name || "");
+      setValue("representedCpf", client.cpf || "");
+      setValue("representedRg", client.rg || "");
+      // O endereço do cliente é uma string única, preenchendo o campo de endereço principal.
+      setValue("representedAddress", client.address || "");
+    }
+  }, [client, setValue]);
 
   const onSubmit = (data: TermoRepresentacaoFormData) => {
     console.log(data);

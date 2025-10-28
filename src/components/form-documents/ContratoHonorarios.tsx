@@ -8,6 +8,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import Util from "@/utils/Util";
 import { Divider } from "antd";
+import { useEffect } from "react";
+import { ClientType, Documento } from "@/pages/dashboard";
 
 const FeeAgreementSchema = yup.object({
   clientFullName: yup
@@ -54,7 +56,17 @@ const FeeAgreementSchema = yup.object({
 type FeeAgreementFormData = yup.InferType<typeof FeeAgreementSchema>;
 type FeeAgreementResolver = Resolver<FeeAgreementFormData>;
 
-export default function ContratoHonorarios() {
+interface ContratoHonorariosProps {
+  client?: ClientType | null;
+  idForm?: string;
+  documents?: Documento[];
+}
+
+export default function ContratoHonorarios({
+  client,
+  idForm,
+}: ContratoHonorariosProps) {
+  console.log("🚀 ~ ContratoHonorarios ~ idForm:", idForm);
   const {
     register,
     handleSubmit,
@@ -65,8 +77,26 @@ export default function ContratoHonorarios() {
     mode: "onChange",
   });
 
+  useEffect(() => {
+    if (client && "id" in client) {
+      setValue("clientFullName", client.name || "");
+      setValue("clientNationality", client.nationality || "");
+      setValue("clientCpf", client.cpf || "");
+
+      // O endereço está vindo como uma string única, ajustado para o campo de rua.
+      // Você pode querer dividir o endereço em seus respectivos campos.
+      setValue("clientStreet", client.address || "");
+      // setValue("clientStreetNumber", client.addressNumber || "");
+      // setValue("clientNeighborhood", client.neighborhood || "");
+      // setValue("clientCity", client.city || "");
+      // setValue("clientState", client.state || "");
+      // setValue("clientZipCode", client.zipCode || "");
+    }
+    console.log("🚀 ~ ContratoHonorarios ~ client:", client);
+  }, [client, setValue]);
+
   const onSubmit = (data: FeeAgreementFormData) => {
-    console.log("Form data:", data);
+    console.log("Form data:", { templateId: idForm, ...data });
   };
 
   const handleCpfChange = (e: React.ChangeEvent<HTMLInputElement>) => {

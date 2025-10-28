@@ -8,6 +8,12 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "../ui/checkbox";
+import { useEffect, useState } from "react";
+import { ClientType, Documento } from "@/pages/dashboard/index";
+import Api, { ApiErrorResponse } from "@/api";
+import { useGenerateDocument } from "@/contexts/GenerateContext";
+import { toast } from "sonner";
+import { Loader2 } from "lucide-react";
 
 const procuracaoSchema = yup.object({
   grantorName: yup
@@ -140,12 +146,24 @@ const procuracaoSchema = yup.object({
 type ProcuracaoFormData = yup.InferType<typeof procuracaoSchema>;
 type ProcuracaoResolver = Resolver<ProcuracaoFormData>;
 
-export default function ProcuracaoInssForm() {
+interface ProcuracaoInssFormProps {
+  client?: ClientType | null;
+  idForm?: string;
+  documents?: Documento[];
+}
+
+export default function ProcuracaoInssForm({
+  client,
+  idForm,
+  documents,
+}: ProcuracaoInssFormProps) {
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const {
     register,
     handleSubmit,
     watch,
     control,
+    setValue,
     formState: { errors },
   } = useForm<ProcuracaoFormData>({
     resolver: yupResolver(procuracaoSchema) as ProcuracaoResolver,
@@ -171,8 +189,23 @@ export default function ProcuracaoInssForm() {
   const watchResidenceAbroad = watch("receivePaymentsResidenceAbroad");
   const watchOtherRequest = watch("otherRequest");
 
-  const onSubmit = (data: ProcuracaoFormData) => {
-    const finalData = {
+  const { generatedDocument } = useGenerateDocument();
+
+  useEffect(() => {
+    if (client) {
+      setValue("grantorName", client.name || "");
+      setValue("grantorNationality", client.nationality || "");
+      setValue("grantorMaritalStatus", client.maritalStatus || "");
+      setValue("grantorIdentity", client.rg || "");
+      setValue("grantorProfession", client.occupation || "");
+
+      setValue("grantorAddress", client.address || "");
+    }
+  }, [client, setValue]);
+
+  const onSubmit = async (data: ProcuracaoFormData) => {
+    setIsSubmitting(true);
+    const bodyData = {
       grantor: {
         name: data.grantorName,
         nationality: data.grantorNationality,
@@ -217,8 +250,32 @@ export default function ProcuracaoInssForm() {
       otherRequestDescription: data.otherRequestDescription,
       location: data.location,
       date: data.date,
+      templateId: idForm,
     };
-    console.log("🚀 ~ onSubmit ~ finalData:", finalData);
+
+    try {
+      const body = {
+        clientId: client?.id,
+        templateId: idForm,
+        extraData: bodyData,
+      };
+
+      const response: Record<string, any> = await Api.post(
+        "/documents/generate",
+        body
+      );
+      if (response?.documentId) {
+        generatedDocument(response.documentId);
+      }
+
+      toast.success("Documento gerado com sucesso!");
+    } catch (error) {
+      const apiError = error as ApiErrorResponse;
+      toast.error(`${apiError.message}`);
+      console.error("Erro capturado no componente:", apiError.message);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -1084,9 +1141,17 @@ export default function ProcuracaoInssForm() {
               <div className=" flex flex-row items-center gap-5 ">
                 <Button
                   type="submit"
-                  className="w-[194px] bg-[#529FF6] font-bold hover:bg-blue-700 text-white py-5 md:py-6 text-[15px] md:text-[15] rounded-[8px]"
+                  disabled={isSubmitting}
+                  className="w-[194px] bg-[#529FF6] font-bold hover:bg-blue-700 text-white py-5 md:py-6 text-[15px] md:text-[15] rounded-[8px] disabled:opacity-50"
                 >
-                  Finalizar documento
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Gerando...
+                    </>
+                  ) : (
+                    "Finalizar documento"
+                  )}
                 </Button>
                 <Button
                   type="button"

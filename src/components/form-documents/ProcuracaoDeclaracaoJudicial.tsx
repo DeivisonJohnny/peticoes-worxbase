@@ -8,6 +8,12 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import Util from "@/utils/Util";
 import { Divider } from "antd";
+import { ClientType, Documento } from "@/pages/dashboard/index";
+import { useEffect, useState } from "react";
+import Api, { ApiErrorResponse } from "@/api";
+import { toast } from "sonner";
+import { useGenerateDocument } from "@/contexts/GenerateContext";
+import { Loader2 } from "lucide-react";
 
 const AdJudiciaPowerOfAttorneySchema = yup.object({
   grantorFullName: yup
@@ -36,7 +42,18 @@ const AdJudiciaPowerOfAttorneySchema = yup.object({
 type AdJudiciaFormData = yup.InferType<typeof AdJudiciaPowerOfAttorneySchema>;
 type AdJudiciaResolver = Resolver<AdJudiciaFormData>;
 
-export default function ProcuracaoDeclaracaoJudicial() {
+interface ProcuracaoDeclaracaoJudicialProps {
+  client?: ClientType | null;
+  idForm?: string;
+  documents?: Documento[];
+}
+
+export default function ProcuracaoDeclaracaoJudicial({
+  client,
+  idForm,
+  documents,
+}: ProcuracaoDeclaracaoJudicialProps) {
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const {
     register,
     handleSubmit,
@@ -47,8 +64,55 @@ export default function ProcuracaoDeclaracaoJudicial() {
     mode: "onChange",
   });
 
-  const onSubmit = (data: AdJudiciaFormData) => {
-    console.log("Form data:", data);
+  const { generatedDocument } = useGenerateDocument();
+
+  useEffect(() => {
+    if (client) {
+      setValue("grantorFullName", client.name || "");
+      setValue("grantorNationality", client.nationality || "");
+      setValue("grantorCpf", client.cpf || "");
+      setValue("grantorStreet", client.address || "");
+    }
+
+    if (documents && idForm) {
+      const doc = documents.find((d) => d.templateId === idForm);
+
+      if (doc?.lastGenerated?.dataSnapshot?.document) {
+        const documentData = doc.lastGenerated.dataSnapshot.document;
+        Object.keys(documentData).forEach((key) => {
+          if (key in AdJudiciaPowerOfAttorneySchema.fields) {
+            setValue(key as keyof AdJudiciaFormData, documentData[key]);
+          }
+        });
+      }
+    }
+  }, [client, documents, idForm, setValue]);
+
+  const onSubmit = async (data: AdJudiciaFormData) => {
+    setIsSubmitting(true);
+    const body = {
+      clientId: client?.id,
+      templateId: idForm,
+      extraData: data,
+    };
+
+    try {
+      const response: Record<string, any> = await Api.post(
+        "/documents/generate",
+        body
+      );
+      if (response?.documentId) {
+        generatedDocument(response.documentId);
+      }
+
+      toast.success("Documento gerado com sucesso!");
+    } catch (error) {
+      const apiError = error as ApiErrorResponse;
+      toast.error(`${apiError.message}`);
+      console.error("Erro capturado no componente:", apiError.message);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleCpfChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -336,9 +400,17 @@ export default function ProcuracaoDeclaracaoJudicial() {
               <div className="flex flex-row items-center gap-5 pt-5">
                 <Button
                   type="submit"
+                  disabled={isSubmitting}
                   className="w-[194px] bg-[#529FF6] font-bold hover:bg-blue-700 text-white py-5 md:py-6 text-[15px] md:text-[15] rounded-[8px] cursor-pointer"
                 >
-                  Finalizar documento
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Gerando...
+                    </>
+                  ) : (
+                    "Finalizar documento"
+                  )}
                 </Button>
                 <Button
                   type="button"

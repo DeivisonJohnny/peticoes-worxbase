@@ -83,4 +83,19 @@ export default class Util {
 
     return false;
   }
+
+  static compararStrings(
+    text: string | null | undefined,
+    textCompare: string | null | undefined
+  ): boolean {
+    if (!text || !textCompare) return false;
+
+    const normalize = (str: string) =>
+      str
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase();
+
+    return normalize(text).includes(normalize(textCompare));
+  }
 }

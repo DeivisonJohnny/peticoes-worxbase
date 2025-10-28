@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "../ui/checkbox";
 import Util from "@/utils/Util";
 import { useEffect } from "react";
+import { ClientType, Documento } from "@/pages/dashboard";
 
 const statementSchema = yup.object({
   fullName: yup
@@ -82,7 +83,16 @@ const statementSchema = yup.object({
 type StatementFormData = yup.InferType<typeof statementSchema>;
 type StatementResolver = Resolver<StatementFormData>;
 
-export default function DeclaracaoNaoRecebimentoForm() {
+interface DeclaracaoNaoRecebimentoFormProps {
+  client?: ClientType | null;
+  idForm?: string;
+  documents?: Documento[];
+}
+
+export default function DeclaracaoNaoRecebimentoForm({
+  client,
+  idForm,
+}: DeclaracaoNaoRecebimentoFormProps) {
   const {
     register,
     handleSubmit,
@@ -127,7 +137,7 @@ export default function DeclaracaoNaoRecebimentoForm() {
   }, [benefitType, resetField]);
 
   const onSubmit = (data: StatementFormData) => {
-    console.log(data);
+    console.log({ templateId: idForm, ...data });
   };
 
   const handleCpfChange = (e: React.ChangeEvent<HTMLInputElement>) => {

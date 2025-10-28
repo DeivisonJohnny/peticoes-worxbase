@@ -8,6 +8,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import Util from "@/utils/Util";
 import { Divider } from "antd";
+import { ClientType, Documento } from "@/pages/dashboard";
+import { useEffect } from "react";
 
 const LoasIdosoSchema = yup.object({
   fullName: yup
@@ -56,7 +58,13 @@ function formatPhone(value: string) {
   }
 }
 
-export default function LoasIdoso() {
+interface LoasIdosoProps {
+  client?: ClientType | null;
+  idForm?: string;
+  documents?: Documento[];
+}
+
+export default function LoasIdoso({ client, idForm }: LoasIdosoProps) {
   const {
     register,
     handleSubmit,
@@ -67,8 +75,27 @@ export default function LoasIdoso() {
     mode: "onChange",
   });
 
+  useEffect(() => {
+    if (client) {
+      setValue("fullName", client.name || "");
+      setValue("nationality", client.nationality || "");
+      setValue(
+        "birthDate",
+        client.dateOfBirth
+          ? new Date(client.dateOfBirth).toISOString().split("T")[0]
+          : ""
+      );
+      setValue("motherName", client.motherName || "");
+      setValue("rg", client.rg || "");
+      setValue("cpf", client.cpf || "");
+      setValue("phone", client.phone || "");
+      // O endereço do cliente é uma string única, preenchendo o campo de rua.
+      setValue("street", client.address || "");
+    }
+  }, [client, setValue]);
+
   const onSubmit = (data: BpcLoasFormData) => {
-    console.log("Dados do Formulário:", data);
+    console.log("Dados do Formulário:", { templateId: idForm, ...data });
   };
 
   const handleCpfChange = (e: React.ChangeEvent<HTMLInputElement>) => {

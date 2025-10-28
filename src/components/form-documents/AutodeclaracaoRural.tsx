@@ -10,7 +10,8 @@ import { Checkbox } from "../ui/checkbox";
 import Util from "@/utils/Util";
 import TableEditable from "../TableEditable";
 import { Plus, Trash2 } from "lucide-react";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { ClientType, Documento } from "@/pages/dashboard";
 
 const ruralSelfDeclarationSchema = yup.object({
   fullName: yup
@@ -85,7 +86,16 @@ type RuralSelfDeclarationFormData = yup.InferType<
 >;
 type RuralSelfDeclarationResolver = Resolver<RuralSelfDeclarationFormData>;
 
-export default function AutodeclaracaoRural() {
+interface AutodeclaracaoRuralProps {
+  client?: ClientType | null;
+  idForm?: string;
+  documents?: Documento[];
+}
+
+export default function AutodeclaracaoRural({
+  client,
+  idForm,
+}: AutodeclaracaoRuralProps) {
   const [tablesData, setTablesData] = useState<{ [key: string]: string[][] }>(
     {}
   );
@@ -175,8 +185,27 @@ export default function AutodeclaracaoRural() {
     name: "properties",
   });
 
+  useEffect(() => {
+    if (client) {
+      setValue("fullName", client.name || "");
+      setValue("nickname", client.nickname || "");
+      setValue(
+        "birthDate",
+        client.dateOfBirth
+          ? new Date(client.dateOfBirth).toISOString().split("T")[0]
+          : ""
+      );
+      setValue("birthPlace", client.birthPlace || "");
+      setValue("address", client.address || "");
+      setValue("rg", client.rg || "");
+      setValue("cpf", client.cpf || "");
+      // O endereço do cliente é uma string única, preenchendo o campo de endereço principal.
+      // Você pode querer dividir o endereço em seus respectivos campos.
+    }
+  }, [client, setValue]);
+
   const onSubmit = (data: RuralSelfDeclarationFormData) => {
-    console.log({ ...data, ...tablesData });
+    console.log({ templateId: idForm, ...data, ...tablesData });
   };
 
   const handleCpfChange = (e: React.ChangeEvent<HTMLInputElement>) => {
