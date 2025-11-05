@@ -9,7 +9,11 @@ import { Button } from "@/components/ui/button";
 import Util from "@/utils/Util";
 import { Divider } from "antd";
 import { ClientType, Documento } from "@/pages/dashboard";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import Api, { ApiErrorResponse } from "@/api";
+import { toast } from "sonner";
+import { useGenerateDocument } from "@/contexts/GenerateContext";
+import { Loader2 } from "lucide-react";
 
 const LoasIdosoSchema = yup.object({
   fullName: yup
@@ -65,6 +69,9 @@ interface LoasIdosoProps {
 }
 
 export default function LoasIdoso({ client, idForm }: LoasIdosoProps) {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { generatedDocument } = useGenerateDocument();
+
   const {
     register,
     handleSubmit,
@@ -94,8 +101,30 @@ export default function LoasIdoso({ client, idForm }: LoasIdosoProps) {
     }
   }, [client, setValue]);
 
-  const onSubmit = (data: BpcLoasFormData) => {
-    console.log("Dados do Formulário:", { templateId: idForm, ...data });
+  const onSubmit = async (data: BpcLoasFormData) => {
+    setIsSubmitting(true);
+    const body = {
+      clientId: client?.id,
+      templateId: idForm,
+      extraData: data,
+    };
+
+    try {
+      const response: { documentId?: string } = await Api.post(
+        "/documents/generate",
+        body
+      );
+      if (response?.documentId) {
+        generatedDocument(response.documentId);
+      }
+      toast.success("Documento gerado com sucesso!");
+    } catch (error) {
+      const apiError = error as ApiErrorResponse;
+      toast.error(`${apiError.message}`);
+      console.error("Erro capturado no componente:", apiError.message);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleCpfChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -600,12 +629,21 @@ export default function LoasIdoso({ client, idForm }: LoasIdosoProps) {
               <div className=" flex flex-row items-center gap-5 ">
                 <Button
                   type="submit"
+                  disabled={isSubmitting}
                   className="w-[194px] bg-[#529FF6] font-bold hover:bg-blue-700 text-white py-5 md:py-6 text-[15px] md:text-[15] rounded-[8px] cursor-pointer "
                 >
-                  Finalizar documento
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Gerando...
+                    </>
+                  ) : (
+                    "Finalizar documento"
+                  )}
                 </Button>
                 <Button
                   type="button"
+                  disabled={isSubmitting}
                   className="w-[177px] bg-[#fff] border-1 border-[#DDB100] font-bold hover:bg-[#DDB000] hover:text-white text-[#DDB000] py-5 md:py-6 text-[15px] md:text-[15] rounded-[8px] cursor-pointer "
                 >
                   Limpar formulário

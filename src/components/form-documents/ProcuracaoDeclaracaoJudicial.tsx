@@ -81,7 +81,10 @@ export default function ProcuracaoDeclaracaoJudicial({
         const documentData = doc.lastGenerated.dataSnapshot.document;
         Object.keys(documentData).forEach((key) => {
           if (key in AdJudiciaPowerOfAttorneySchema.fields) {
-            setValue(key as keyof AdJudiciaFormData, documentData[key]);
+            setValue(
+              key as keyof AdJudiciaFormData,
+              documentData[key] as string
+            );
           }
         });
       }
@@ -97,7 +100,7 @@ export default function ProcuracaoDeclaracaoJudicial({
     };
 
     try {
-      const response: Record<string, any> = await Api.post(
+      const response: { documentId?: string } = await Api.post(
         "/documents/generate",
         body
       );

@@ -10,8 +10,12 @@ import { Checkbox } from "../ui/checkbox";
 import Util from "@/utils/Util";
 import TableEditable from "../TableEditable";
 import { Plus, Trash2 } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { ClientType, Documento } from "@/pages/dashboard";
+import Api, { ApiErrorResponse } from "@/api";
+import { toast } from "sonner";
+import { useGenerateDocument } from "@/contexts/GenerateContext";
+import { Loader2 } from "lucide-react";
 
 const ruralSelfDeclarationSchema = yup.object({
   fullName: yup
@@ -96,16 +100,8 @@ export default function AutodeclaracaoRural({
   client,
   idForm,
 }: AutodeclaracaoRuralProps) {
-  const [tablesData, setTablesData] = useState<{ [key: string]: string[][] }>(
-    {}
-  );
-
-  const handleTableChange = useCallback(
-    ({ name, values }: { name: string; values: string[][] }) => {
-      setTablesData((prev) => ({ ...prev, [name]: values }));
-    },
-    []
-  );
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { generatedDocument } = useGenerateDocument();
 
   const {
     register,
@@ -199,13 +195,33 @@ export default function AutodeclaracaoRural({
       setValue("address", client.address || "");
       setValue("rg", client.rg || "");
       setValue("cpf", client.cpf || "");
-      // O endereço do cliente é uma string única, preenchendo o campo de endereço principal.
-      // Você pode querer dividir o endereço em seus respectivos campos.
     }
   }, [client, setValue]);
 
-  const onSubmit = (data: RuralSelfDeclarationFormData) => {
-    console.log({ templateId: idForm, ...data, ...tablesData });
+  const onSubmit = async (data: RuralSelfDeclarationFormData) => {
+    setIsSubmitting(true);
+    const body = {
+      clientId: client?.id,
+      templateId: idForm,
+      extraData: data,
+    };
+
+    try {
+      const response: { documentId?: string } = await Api.post(
+        "/documents/generate",
+        body
+      );
+      if (response?.documentId) {
+        generatedDocument(response.documentId);
+      }
+      toast.success("Documento gerado com sucesso!");
+    } catch (error) {
+      const apiError = error as ApiErrorResponse;
+      toast.error(`${apiError.message}`);
+      console.error("Erro capturado no componente:", apiError.message);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleCpfChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -538,7 +554,6 @@ export default function AutodeclaracaoRural({
                         options: ["Individual", "Regime de economia familiar"],
                       },
                     ]}
-                    onChange={handleTableChange}
                     lineInitial={3}
                   />
                   <p className=" font-[300] text-[16px]  text-[#5F5F5F]  ">
@@ -738,7 +753,6 @@ export default function AutodeclaracaoRural({
                       { label: "PERÍODO(XX/XX/XXXX A XX/XX/XXXX)" },
                       { label: "ÁREA CEDIDA em hectare - ha" },
                     ]}
-                    onChange={handleTableChange}
                     lineInitial={3}
                   />
                   <p className=" font-[300] text-[16px]  text-[#5F5F5F]  ">
@@ -905,7 +919,6 @@ export default function AutodeclaracaoRural({
                       { label: "ATIVIDADE" },
                       { label: "SUBSISTÊNCIA/VENDA" },
                     ]}
-                    onChange={handleTableChange}
                     lineInitial={3}
                   />
                 </div>
@@ -995,7 +1008,6 @@ export default function AutodeclaracaoRural({
                       { label: "CPF, se possuir" },
                       { label: "PERÍODO (XX/XX/XXXX a XX/XX/XXXX)" },
                     ]}
-                    onChange={handleTableChange}
                     lineInitial={3}
                   />
                   {errors.hasEmployees && (
@@ -1037,7 +1049,6 @@ export default function AutodeclaracaoRural({
                       { label: "LOCAL" },
                       { label: "PERÍODO (XX/XX/XXXX a XX/XX/XXXX)" },
                     ]}
-                    onChange={handleTableChange}
                     lineInitial={3}
                   />
                   <p className=" font-[300] text-[16px]  text-[#5F5F5F]  ">
@@ -1085,7 +1096,6 @@ export default function AutodeclaracaoRural({
                       { label: "RENDA (R$)" },
                       { label: "OUTRAS INFORMAÇÕES*" },
                     ]}
-                    onChange={handleTableChange}
                     lineInitial={3}
                   />
                   <p className=" font-[300] text-[16px]  text-[#5F5F5F]  ">
@@ -1244,12 +1254,21 @@ export default function AutodeclaracaoRural({
               <div className=" flex flex-row items-center gap-5 ">
                 <Button
                   type="submit"
+                  disabled={isSubmitting}
                   className="w-[194px] bg-[#529FF6] font-bold hover:bg-blue-700 text-white py-5 md:py-6 text-[15px] md:text-[15] rounded-[8px] cursor-pointer "
                 >
-                  Finalizar documento
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Gerando...
+                    </>
+                  ) : (
+                    "Finalizar documento"
+                  )}
                 </Button>
                 <Button
                   type="button"
+                  disabled={isSubmitting}
                   className="w-[177px] bg-[#fff]   border-1 border-[#DDB100] font-bold hover:bg-[#DDB000] hover:text-white  text-[#DDB000] py-5 md:py-6 text-[15px] md:text-[15] rounded-[8px] cursor-pointer "
                 >
                   Limpar formulário

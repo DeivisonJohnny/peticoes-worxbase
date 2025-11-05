@@ -8,8 +8,12 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "../ui/checkbox";
 import Util from "@/utils/Util";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { ClientType, Documento } from "@/pages/dashboard";
+import Api, { ApiErrorResponse } from "@/api";
+import { toast } from "sonner";
+import { useGenerateDocument } from "@/contexts/GenerateContext";
+import { Loader2 } from "lucide-react";
 
 const statementSchema = yup.object({
   fullName: yup
@@ -93,6 +97,9 @@ export default function DeclaracaoNaoRecebimentoForm({
   client,
   idForm,
 }: DeclaracaoNaoRecebimentoFormProps) {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { generatedDocument } = useGenerateDocument();
+
   const {
     register,
     handleSubmit,
@@ -136,8 +143,30 @@ export default function DeclaracaoNaoRecebimentoForm({
     }
   }, [benefitType, resetField]);
 
-  const onSubmit = (data: StatementFormData) => {
-    console.log({ templateId: idForm, ...data });
+  const onSubmit = async (data: StatementFormData) => {
+    setIsSubmitting(true);
+    const body = {
+      clientId: client?.id,
+      templateId: idForm,
+      extraData: data,
+    };
+
+    try {
+      const response: { documentId?: string } = await Api.post(
+        "/documents/generate",
+        body
+      );
+      if (response?.documentId) {
+        generatedDocument(response.documentId);
+      }
+      toast.success("Documento gerado com sucesso!");
+    } catch (error) {
+      const apiError = error as ApiErrorResponse;
+      toast.error(`${apiError.message}`);
+      console.error("Erro capturado no componente:", apiError.message);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleCpfChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -663,12 +692,21 @@ export default function DeclaracaoNaoRecebimentoForm({
               <div className=" flex flex-row items-center gap-5 ">
                 <Button
                   type="submit"
+                  disabled={isSubmitting}
                   className="w-[194px] bg-[#529FF6] font-bold hover:bg-blue-700 text-white py-5 md:py-6 text-[15px] md:text-[15] rounded-[8px]"
                 >
-                  Finalizar documento
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Gerando...
+                    </>
+                  ) : (
+                    "Finalizar documento"
+                  )}
                 </Button>
                 <Button
                   type="button"
+                  disabled={isSubmitting}
                   onClick={() => {
                     const defaultVals: Record<
                       string,

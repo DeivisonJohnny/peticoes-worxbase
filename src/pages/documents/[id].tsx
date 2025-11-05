@@ -365,7 +365,7 @@ export default function Documents() {
         </p>
 
         <div className=" w-full flex flex-col gap-3 ">
-          {listForms.map((item, index) => {
+          {listForms.map((item) => {
             if (Util.compararStrings(item.label, formIsShown.label)) {
               return null;
             }

@@ -155,7 +155,6 @@ interface ProcuracaoInssFormProps {
 export default function ProcuracaoInssForm({
   client,
   idForm,
-  documents,
 }: ProcuracaoInssFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const {
@@ -260,7 +259,7 @@ export default function ProcuracaoInssForm({
         extraData: bodyData,
       };
 
-      const response: Record<string, any> = await Api.post(
+      const response: { documentId?: string } = await Api.post(
         "/documents/generate",
         body
       );

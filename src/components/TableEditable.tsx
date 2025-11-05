@@ -7,7 +7,7 @@ import {
   TableHeader,
   TableRow,
 } from "./ui/table";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Button } from "./ui/button";
 import { Minus, Plus } from "lucide-react";
 import {
@@ -29,14 +29,12 @@ interface TableEditableProps {
   name: string;
   lineInitial: number;
   colums: TableEditableColumnsType[];
-  onChange?: (data: { name: string; values: string[][] }) => void;
 }
 
 export default function TableEditable({
   name,
   lineInitial = 3,
   colums,
-  onChange,
 }: TableEditableProps) {
   const [col] = useState<TableEditableColumnsType[]>(colums);
   const [countLines, setCountLines] = useState(lineInitial);
@@ -46,12 +44,6 @@ export default function TableEditable({
       Array.from({ length: col.length }, () => "")
     )
   );
-
-  useEffect(() => {
-    if (onChange) {
-      onChange({ name, values });
-    }
-  }, [values, name, onChange]);
 
   const removeLine = () => {
     if (countLines <= 1) return;

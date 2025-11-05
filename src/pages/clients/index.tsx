@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
@@ -65,7 +65,7 @@ export default function Clients() {
 
   const router = useRouter();
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     setIsLoading(true);
     try {
       const params = new URLSearchParams();
@@ -93,7 +93,7 @@ export default function Clients() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [filters.filterEmail, filters.filterName, filters.search]);
 
   const toggleFilter = (field: string, checked: boolean) => {
     setFilters({
@@ -105,7 +105,7 @@ export default function Clients() {
 
   useEffect(() => {
     fetchData();
-  }, [filters.filterEmail, filters.filterName, filters.search]);
+  }, [fetchData]);
 
   const handleViewDetails = (clientId: string) => {
     setSelectedClientId(clientId);
