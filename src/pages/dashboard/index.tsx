@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
@@ -125,11 +125,11 @@ export type LastGenerated = {
       nationality: string | null;
       maritalStatus: string | null;
     };
-    document: Record<string, unknown>;
+    document: Record<string, any>;
   };
 };
 
-type FilterType = {
+export type FilterType = {
   filterName: boolean;
   filterEmail: boolean;
   search: string;
@@ -175,7 +175,7 @@ export default function Dashboard() {
     }));
   };
 
-  const fetchData = useCallback(async () => {
+  const fetchData = async () => {
     try {
       const params = new URLSearchParams();
 
@@ -196,7 +196,7 @@ export default function Dashboard() {
     } finally {
       setIsLoading(false);
     }
-  }, [filters.filterEmail, filters.filterName, filters.search]);
+  };
 
   const onDeleteCliente = async () => {
     setIsLoadingDelete(true);
@@ -220,7 +220,7 @@ export default function Dashboard() {
     }
   };
 
-  const fetchDocuments = useCallback(async () => {
+  const fetchDocuments = async () => {
     setIsDocumentLoading(true);
     try {
       if (selectedClient?.id) {
@@ -260,15 +260,16 @@ export default function Dashboard() {
     } finally {
       setIsDocumentLoading(false);
     }
-  }, [selectedClient?.id]);
+  };
 
   useEffect(() => {
     fetchData();
-  }, [fetchData]);
+  }, [filters.search, filters.filterName, filters.filterEmail]);
 
   useEffect(() => {
     fetchDocuments();
-  }, [fetchDocuments, selectedClient]);
+    console.log(selectedDocument);
+  }, [selectedClient]);
 
   const downloadDocuments = async () => {
     setIsDownloading(true);
@@ -310,9 +311,8 @@ export default function Dashboard() {
       window.URL.revokeObjectURL(url);
 
       toast.success("Arquivo ZIP baixado com sucesso!");
-    } catch (error) {
-      const apiError = error as ApiErrorResponse;
-      toast.error(apiError.message || "Erro ao baixar o arquivo ZIP");
+    } catch (error: any) {
+      toast.error(error.message || "Erro ao baixar o arquivo ZIP");
     } finally {
       setIsDownloading(false);
     }
@@ -325,6 +325,12 @@ export default function Dashboard() {
       </div>
     );
   }
+
+  const documentsToDownload = selectedDocument.filter(
+    (doc) => doc.checked && doc.lastGenerated
+  );
+  const isGenerateButtonDisabled =
+    isDownloading || !selectedClient || documentsToDownload.length === 0;
 
   return (
     <div className="min-h-[calc(100vh_-_70px)] p-2 w-[100%] ">
@@ -447,9 +453,9 @@ export default function Dashboard() {
 
               <div className=" flex flex-col w-full gap-2 h-[300px] overflow-y-scroll scroll-list-clients  border-b-1 border-[#d6d6d6] pb-2 ">
                 {clients.length > 0 &&
-                  clients?.map((client) => (
+                  clients?.map((client, index) => (
                     <div
-                      key={client.id}
+                      key={index}
                       className={` flex items-center justify-between py-2 px-3 hover:bg-gray-50  cursor-pointer bg-white  border-1 rounded-[8px] shadow-[0px_2px_4px_#0000001A] min-h-[42px]  ${
                         selectedClient?.id === client.id
                           ? "border-[royalblue] shadow-[#4169e183]"
@@ -600,7 +606,7 @@ export default function Dashboard() {
                       </>
                     ) : (
                       selectedDocument.length > 0 &&
-                      selectedDocument.map((doc) => (
+                      selectedDocument.map((doc, index) => (
                         <div
                           key={doc.templateId}
                           className={`flex items-center space-x-2 bg-[#F5F5F5] rounded-[8px] gap-[8px] pl-[10px]  ${
@@ -648,9 +654,13 @@ export default function Dashboard() {
             </div>
 
             <Button
-              className=" rounded-[8px] h-[43px] w-[205px] bg-[#529FF6] hover:bg-blue-700 text-white text-[16px]  "
+              className={`rounded-[8px] h-[43px] w-[205px] text-white text-[16px] transition-colors ${
+                isGenerateButtonDisabled
+                  ? "bg-gray-400 cursor-not-allowed"
+                  : "bg-[#529FF6] hover:bg-blue-700"
+              }`}
               onClick={downloadDocuments}
-              disabled={isDownloading}
+              disabled={isGenerateButtonDisabled}
             >
               {isDownloading ? (
                 <>

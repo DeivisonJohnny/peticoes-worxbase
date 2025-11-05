@@ -1,4 +1,4 @@
-import { useEffect, useState, type ElementType, useCallback } from "react";
+import { useEffect, useState, type ElementType } from "react";
 import React from "react";
 
 import AutodeclaracaoRural from "@/components/form-documents/AutodeclaracaoRural";
@@ -305,7 +305,7 @@ export default function Documents() {
     }, 150);
   };
 
-  const fetchData = useCallback(async (id: string) => {
+  const fetchData = async (id: string) => {
     setIsLoading(true);
     try {
       const [clientData, documents] = await Promise.all([
@@ -321,13 +321,13 @@ export default function Documents() {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  };
 
   useEffect(() => {
     if (id && id !== "new" && typeof id === "string") {
       fetchData(id);
     }
-  }, [id, fetchData]);
+  }, [id]);
 
   if (isLoading) {
     return (
@@ -365,7 +365,7 @@ export default function Documents() {
         </p>
 
         <div className=" w-full flex flex-col gap-3 ">
-          {listForms.map((item) => {
+          {listForms.map((item, index) => {
             if (Util.compararStrings(item.label, formIsShown.label)) {
               return null;
             }

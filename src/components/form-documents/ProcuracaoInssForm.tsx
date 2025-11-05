@@ -157,7 +157,6 @@ export default function ProcuracaoInssForm({
   idForm,
   documents,
 }: ProcuracaoInssFormProps) {
-  console.log("🚀 ~ ProcuracaoInssForm ~ documents:", documents);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const {
     register,
@@ -260,7 +259,7 @@ export default function ProcuracaoInssForm({
         templateId: idForm,
         extraData: bodyData,
       };
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
       const response: Record<string, any> = await Api.post(
         "/documents/generate",
         body

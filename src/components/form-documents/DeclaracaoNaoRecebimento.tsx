@@ -93,7 +93,6 @@ export default function DeclaracaoNaoRecebimentoForm({
   client,
   idForm,
 }: DeclaracaoNaoRecebimentoFormProps) {
-  console.log("🚀 ~ DeclaracaoNaoRecebimentoForm ~ client:", client);
   const {
     register,
     handleSubmit,

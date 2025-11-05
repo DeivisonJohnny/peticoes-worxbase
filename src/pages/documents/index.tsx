@@ -1,309 +1,160 @@
-import { useEffect, useState, type ElementType } from "react";
+"use client";
 
-import AutodeclaracaoRural from "@/components/form-documents/AutodeclaracaoRural";
-import DeclaracaoNaoRecebimentoForm from "@/components/form-documents/DeclaracaoNaoRecebimento";
-import ProcuracaoInssForm from "@/components/form-documents/ProcuracaoInssForm";
-import TermoRepresentacao from "@/components/form-documents/TermoRepresentacao";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Divider } from "antd";
-import { ArrowRight, CircleCheckBig, LucideProps, Play } from "lucide-react";
-import styled from "styled-components";
-import LoasDeficiencia from "@/components/form-documents/LoasDeficiencia";
-import LoasIdoso from "@/components/form-documents/LoasIdoso";
-import AuxilioDoenca from "@/components/form-documents/AuxilioDoenca";
-import ProcuracaoPPP from "@/components/form-documents/ProcuracaoPPP";
-import ProcuracaoDeclaracaoJudicial from "@/components/form-documents/ProcuracaoDeclaracaoJudicial";
-import ContratoHonorarios from "@/components/form-documents/ContratoHonorarios";
+import { Input } from "@/components/ui/input";
+import { Card } from "@/components/ui/card";
+import { Search, FileText, ArrowRight } from "lucide-react";
+import { useRouter } from "next/router";
+import SpinLoader from "@/components/SpinLoader";
+import Util from "@/utils/Util";
 
-interface classNameStatusProps {
-  div: string;
-  text: string;
+interface DocumentTemplate {
+  id: string;
+  title: string;
+  description: string;
 }
 
-interface listFormsProps {
-  idForm: string;
-  label: string;
-  completed: "preenchido" | "parcial" | "vazio";
-  icon: ElementType;
-  form: React.ReactNode;
-  propsIcon: LucideProps;
-  classNameStatus?: classNameStatusProps;
-}
-
-const listForms: listFormsProps[] = [
+const allDocumentTemplates: DocumentTemplate[] = [
   {
-    idForm: "contrato-honorarios",
-    label: "Contrato de Honorarios",
-    completed: "preenchido",
-    icon: CircleCheckBig,
-    form: <ContratoHonorarios />,
-    propsIcon: {
-      color: "#F5F5F5",
-      fill: "#00B215",
-      size: 24,
-    },
-    classNameStatus: {
-      div: " bg-[#00B2151A] rounded-[50px] h-fit px-[10px] py-[2px]  hover:bg-[#77ff874f] ",
-      text: " text-[#00B215] text-[14px] font-[500] cursor-pointer",
-    },
+    id: "procuracao-inss",
+    title: "Procuração INSS",
+    description: "Instrumento de mandato para representação junto ao INSS.",
   },
   {
-    idForm: "procuracao-declaracao-judicial",
-    label: "Procuração e Declaracão Judicias",
-    completed: "preenchido",
-    icon: CircleCheckBig,
-    form: <ProcuracaoDeclaracaoJudicial />,
-    propsIcon: {
-      color: "#F5F5F5",
-      fill: "#00B215",
-      size: 24,
-    },
-    classNameStatus: {
-      div: " bg-[#00B2151A] rounded-[50px] h-fit px-[10px] py-[2px]  hover:bg-[#77ff874f] ",
-      text: " text-[#00B215] text-[14px] font-[500] cursor-pointer",
-    },
+    id: "declaracao-nao-recebimento",
+    title: "Declaração de não recebimento",
+    description:
+      "Declaração para fins de comprovação de não acúmulo de benefícios.",
   },
   {
-    idForm: "procuracao-ppp",
-    label: "Procuração - PPP",
-    completed: "preenchido",
-    icon: CircleCheckBig,
-    form: <ProcuracaoPPP />,
-    propsIcon: {
-      color: "#F5F5F5",
-      fill: "#00B215",
-      size: 24,
-    },
-    classNameStatus: {
-      div: " bg-[#00B2151A] rounded-[50px] h-fit px-[10px] py-[2px]  hover:bg-[#77ff874f] ",
-      text: " text-[#00B215] text-[14px] font-[500] cursor-pointer",
-    },
+    id: "termo-representacao",
+    title: "Termo de representação",
+    description: "Termo para formalizar a representação legal do cliente.",
   },
   {
-    idForm: "auxilio-doenca",
-    label: "Auxilio Doença",
-    completed: "preenchido",
-    icon: CircleCheckBig,
-    form: <AuxilioDoenca />,
-    propsIcon: {
-      color: "#F5F5F5",
-      fill: "#00B215",
-      size: 24,
-    },
-    classNameStatus: {
-      div: " bg-[#00B2151A] rounded-[50px] h-fit px-[10px] py-[2px]  hover:bg-[#77ff874f] ",
-      text: " text-[#00B215] text-[14px] font-[500] cursor-pointer",
-    },
+    id: "autodeclaracao-rural",
+    title: "Autodeclaração rural",
+    description:
+      "Documento para comprovação de atividade rural do segurado especial.",
   },
   {
-    idForm: "loas-idoso",
-    label: "Loas Idoso",
-    completed: "preenchido",
-    icon: CircleCheckBig,
-    form: <LoasIdoso />,
-    propsIcon: {
-      color: "#F5F5F5",
-      fill: "#00B215",
-      size: 24,
-    },
-    classNameStatus: {
-      div: " bg-[#00B2151A] rounded-[50px] h-fit px-[10px] py-[2px]  hover:bg-[#77ff874f] ",
-      text: " text-[#00B215] text-[14px] font-[500] cursor-pointer",
-    },
+    id: "contrato-honorarios",
+    title: "Contrato de honorários",
+    description: "Contrato para formalização dos honorários advocatícios.",
   },
   {
-    idForm: "loas-deficiencia",
-    label: "Loas Deficiência",
-    completed: "preenchido",
-    icon: CircleCheckBig,
-    form: <LoasDeficiencia />,
-    propsIcon: {
-      color: "#F5F5F5",
-      fill: "#00B215",
-      size: 24,
-    },
-    classNameStatus: {
-      div: " bg-[#00B2151A] rounded-[50px] h-fit px-[10px] py-[2px]  hover:bg-[#77ff874f] ",
-      text: " text-[#00B215] text-[14px] font-[500] cursor-pointer",
-    },
+    id: "procuracao-declaracao-judicial",
+    title: "Procuração e Declaração Judicial",
+    description:
+      "Procuração Ad Judicia para representação em processos judiciais.",
   },
   {
-    idForm: "procuracao-inss",
-    label: "Procuração INSS",
-    completed: "preenchido",
-    icon: CircleCheckBig,
-    form: <ProcuracaoInssForm />,
-    propsIcon: {
-      color: "#F5F5F5",
-      fill: "#00B215",
-      size: 24,
-    },
-    classNameStatus: {
-      div: " bg-[#00B2151A] rounded-[50px] h-fit px-[10px] py-[2px]  hover:bg-[#77ff874f] ",
-      text: " text-[#00B215] text-[14px] font-[500] cursor-pointer",
-    },
+    id: "procuracao-ppp",
+    title: "Procuração - PPP",
+    description:
+      "Procuração para solicitação do Perfil Profissiográfico Previdenciário.",
   },
   {
-    idForm: "autodeclaracao-rural",
-
-    label: "Autodeclaração rural",
-    completed: "parcial",
-    icon: CircleCheckBig,
-    form: <AutodeclaracaoRural />,
-
-    propsIcon: {
-      color: "#00B215",
-      className: " w-[18px] h-[18px] ",
-    },
-    classNameStatus: {
-      div: "bg-[#A1A1A126] rounded-[50px] h-fit px-[10px] py-[2px] hover:bg-[#E1E1E1]",
-      text: "text-[#13529C] text-[14px] font-[500] cursor-pointer ",
-    },
+    id: "auxilio-doenca",
+    title: "Petição de Auxílio Doença",
+    description:
+      "Petição inicial para requerimento de auxílio por incapacidade temporária.",
   },
   {
-    idForm: "termo-representacao",
-
-    label: "Termo de representação",
-    completed: "vazio",
-    icon: Play,
-    form: <TermoRepresentacao />,
-
-    propsIcon: {
-      color: "#529FF6",
-      className: " w-[18px] h-[18px] ",
-      fill: "#529FF6",
-    },
-    classNameStatus: {
-      div: " bg-[#529FF626] rounded-[50px] h-fit px-[10px] py-[2px]  hover:bg-[#77ff874f] flex flex-row items-center gap-1",
-      text: "text-[#13529C] text-[14px] font-[500] cursor-pointer",
-    },
+    id: "loas-idoso",
+    title: "Petição de LOAS Idoso",
+    description:
+      "Petição para concessão de Benefício de Prestação Continuada para idosos.",
   },
   {
-    idForm: "declaracao-nao-recebimento",
-    label: "Declaração de não recebimento",
-    completed: "vazio",
-    icon: Play,
-    form: <DeclaracaoNaoRecebimentoForm />,
-    propsIcon: {
-      color: "#529FF6",
-      className: " w-[18px] h-[18px] ",
-      fill: "#529FF6",
-    },
-    classNameStatus: {
-      div: " bg-[#529FF626] rounded-[50px] h-fit px-[10px] py-[2px]  hover:bg-[#77ff874f] flex flex-row items-center gap-1",
-      text: "text-[#13529C] text-[14px] font-[500] cursor-pointer",
-    },
+    id: "loas-deficiencia",
+    title: "Petição de LOAS Deficiência",
+    description:
+      "Petição para concessão de Benefício de Prestação Continuada para pessoas com deficiência.",
   },
 ];
 
-const FormContainer = styled.div`
-  transition: all 0.3s ease-in-out;
-  opacity: 1;
-  transform: translateY(0);
-
-  &.changing {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-`;
-
 export default function Documents() {
-  const [formIsShown, setFormIsShown] = useState<{
-    idForm: string;
-    component: React.ReactNode;
-  }>({
-    idForm: listForms[0].idForm,
-    component: listForms[0].form,
-  });
-  const [isChanging, setIsChanging] = useState(false);
+  const [documents, setDocuments] =
+    useState<DocumentTemplate[]>(allDocumentTemplates);
+  const [isLoading, setIsLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
+  const router = useRouter();
 
   useEffect(() => {
-    console.log("click reconhecido");
-    console.log(formIsShown);
-  }, [formIsShown]);
-
-  const handleFormChange = (dataForm: {
-    idForm: string;
-    newForm: React.ReactNode;
-  }) => {
-    setIsChanging(true);
-    setTimeout(() => {
-      setFormIsShown({ idForm: dataForm.idForm, component: dataForm.newForm });
-      setIsChanging(false);
-    }, 150);
-  };
+    setIsLoading(true);
+    if (searchTerm === "") {
+      setDocuments(allDocumentTemplates);
+    } else {
+      const filtered = allDocumentTemplates.filter((doc) =>
+        Util.compararStrings(doc.title, searchTerm)
+      );
+      setDocuments(filtered);
+    }
+    setIsLoading(false);
+  }, [searchTerm]);
 
   return (
-    <main className=" max-w-[1200px] w-full mx-auto pb-[100px] px-5 ">
-      <div className="w-full flex flex-col justify-center items-center gap-[15px] border-1 border-[#DFDFDF] rounded-[8px] py-[8px] px-[34px] mb-[25px] ">
-        <p className=" text-[14px] text-[#529FF6] ">Procuração INSS</p>
-        <div className="flex flex-row items-center gap-[10px]">
-          <Ball className="active" />
-          <Ball />
-          <Ball />
-        </div>
-        <p className=" text-[12px] text-[#529FF6] font-[300] ">
-          Documento 1 de 3
-        </p>
+    <div className="min-h-screen p-0 w-[100%]">
+      <div className="max-w-[70%] w-full mx-auto">
+        <Card className="border-none shadow-none gap-5">
+          <h2 className="text-[24px] font-medium text-[#1C3552]">
+            Modelos de Documentos
+          </h2>
+          <div className="flex gap-2 mt-4">
+            <div className="relative flex-1 max-w-[400px]">
+              <Input
+                placeholder="Pesquisar documento..."
+                className="pl-[15px] text-sm rounded-[50px]"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+              <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-black w-4 h-4" />
+            </div>
+          </div>
+
+          {isLoading ? (
+            <div className="flex items-center justify-center mt-10">
+              <SpinLoader />
+            </div>
+          ) : (
+            <div className="space-y-2 flex flex-col gap-3 mt-4">
+              {documents.length > 0 ? (
+                documents.map((doc) => (
+                  <div
+                    key={doc.id}
+                    className="flex items-center justify-between py-2 px-4 hover:bg-gray-50 border-[#CCCCCC] border-1 rounded-[8px] shadow-[0px_2px_4px_#0000001A]"
+                  >
+                    <div className="flex items-center space-x-3">
+                      <FileText className="w-5 h-5 text-[#13529C]" />
+                      <div className="flex flex-col">
+                        <span className="text-[16px] text-[#1C3552] font-medium">
+                          {doc.title}
+                        </span>
+                        <span className="text-[14px] text-[#9A9A9A]">
+                          {doc.description}
+                        </span>
+                      </div>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      className="text-[#13529C] bg-[#529FF626] px-3 py-1 text-[14px] rounded-[50px] font-medium flex items-center gap-2 cursor-pointer hover:bg-[#529FF640] h-auto"
+                      onClick={() => router.push("/dashboard")}
+                    >
+                      Gerar <ArrowRight width={14} />
+                    </Button>
+                  </div>
+                ))
+              ) : (
+                <p className="text-center text-gray-500 mt-10">
+                  Nenhum documento encontrado.
+                </p>
+              )}
+            </div>
+          )}
+        </Card>
       </div>
-
-      <FormContainer className={isChanging ? "changing" : ""}>
-        {formIsShown.component}
-      </FormContainer>
-
-      <Divider />
-      <div className=" flex flex-col gap-4 ">
-        <p className="text-[#529FF6] font-[700] text-[24px] px-0">
-          Próximos docs
-        </p>
-
-        <div className=" w-full flex flex-col gap-3 ">
-          {listForms.map((item) => {
-            const IconDynamic = item.icon;
-
-            return item.idForm !== formIsShown.idForm ? (
-              <Button
-                key={item.idForm}
-                className=" bg-[#F5F5F5] text-[#1C3552] text-[16px] flex flex-row items-center justify-between  w-full rounded-[8px] h-[40px] cursor-pointer  hover:bg-[#E1E1E1]  "
-                onClick={() =>
-                  handleFormChange({ idForm: item.idForm, newForm: item.form })
-                }
-              >
-                <div className=" flex flex-row items-center gap-2 ">
-                  <IconDynamic {...item.propsIcon} />
-
-                  <span className=" text-[#13529C]  text-[16px] font-[400]  ">
-                    {item.label}
-                  </span>
-                </div>
-
-                <div className={item.classNameStatus?.div}>
-                  <p className={item.classNameStatus?.text}>
-                    {item.completed === "vazio"
-                      ? "Clique para preencher este documento"
-                      : item.completed === "parcial"
-                      ? "Em processo..."
-                      : "Documento preenchido!"}
-                  </p>
-
-                  {item.completed === "vazio" && <ArrowRight color="#13529C" />}
-                </div>
-              </Button>
-            ) : null;
-          })}
-        </div>
-      </div>
-    </main>
+    </div>
   );
 }
-
-const Ball = styled.div`
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  background-color: #d9d9d9;
-
-  & .active {
-    background-color: #529ff6 !important ;
-  }
-`;
