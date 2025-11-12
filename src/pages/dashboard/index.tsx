@@ -59,12 +59,35 @@ const documentTypes: Documento[] = [
     lastGenerated: null,
     status: "nao_gerado",
   },
-
   {
     templateId: "cmgpqw4ag0000iotf8rji3pk5",
     title: "Procuração e Declaração Judicial",
     status: "nao_gerado",
     lastGenerated: null,
+  },
+  {
+    templateId: "loas-deficiencia",
+    title: "LOAS - Benefício para Deficiente",
+    lastGenerated: null,
+    status: "nao_gerado",
+  },
+  {
+    templateId: "loas-idoso",
+    title: "LOAS - Idoso",
+    lastGenerated: null,
+    status: "nao_gerado",
+  },
+  {
+    templateId: "loas-auxilio-doenca",
+    title: "LOAS - Auxílio-Doença",
+    lastGenerated: null,
+    status: "nao_gerado",
+  },
+  {
+    templateId: "procuracao-ppp",
+    title: "Procuração Pessoa Física",
+    lastGenerated: null,
+    status: "nao_gerado",
   },
 ];
 
@@ -606,7 +629,7 @@ export default function Dashboard() {
                       </>
                     ) : (
                       selectedDocument.length > 0 &&
-                      selectedDocument.map((doc) => (
+                      selectedDocument.slice(0, 5).map((doc) => (
                         <div
                           key={doc.templateId}
                           className={`flex items-center space-x-2 bg-[#F5F5F5] rounded-[8px] gap-[8px] pl-[10px]  ${
@@ -648,7 +671,60 @@ export default function Dashboard() {
                 </div>
 
                 <div>
-                  <div className="space-y-2 flex flex-col gap-[5px] "></div>
+                  <div className="space-y-2 flex flex-col gap-[5px] ">
+                    {isDocumentLoading ? (
+                      <>
+                        {[...Array(5)].map((_, i) => (
+                          <div
+                            key={i}
+                            className="flex items-center space-x-2 bg-[#F5F5F5] rounded-[8px] py-[5px] pl-[10px] h-[38px]"
+                          >
+                            <div className="w-4 h-4 bg-gray-300 rounded animate-pulse"></div>
+                            <div className="w-4/5 h-4 bg-gray-300 rounded animate-pulse"></div>
+                          </div>
+                        ))}
+                      </>
+                    ) : (
+                      selectedDocument.length > 5 &&
+                      selectedDocument.slice(5, 10).map((doc) => (
+                        <div
+                          key={doc.templateId}
+                          className={`flex items-center space-x-2 bg-[#F5F5F5] rounded-[8px] gap-[8px] pl-[10px]  ${
+                            !doc.lastGenerated
+                              ? "opacity-[0.5] cursor-not-allowed"
+                              : ""
+                          } `}
+                        >
+                          <Checkbox
+                            id={doc.templateId}
+                            checked={!!doc.checked}
+                            onCheckedChange={(checked) =>
+                              toggleDocumentCheckbox(
+                                doc.templateId,
+                                checked as boolean
+                              )
+                            }
+                            className={`w-4 h-4 mr-[0px_!important] border-[#A7A7A7]  ${
+                              !doc.lastGenerated
+                                ? "opacity-[0.5] cursor-not-allowed "
+                                : "cursor-pointer"
+                            }  `}
+                            disabled={!doc.lastGenerated}
+                          />
+                          <label
+                            htmlFor={doc.templateId}
+                            className={`text-[16px] text-[#1C3552] w-full  py-[5px] ${
+                              !doc.lastGenerated
+                                ? "opacity-[0.5] cursor-not-allowed"
+                                : " cursor-pointer"
+                            }  `}
+                          >
+                            {doc.title}
+                          </label>
+                        </div>
+                      ))
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
