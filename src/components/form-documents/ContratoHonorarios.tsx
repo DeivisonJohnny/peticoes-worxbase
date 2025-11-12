@@ -109,7 +109,8 @@ export default function ContratoHonorarios({
     };
 
     try {
-      const response: { documentId?: string } = await Api.post(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const response: Record<string, any> = await Api.post(
         "/documents/generate",
         body
       );

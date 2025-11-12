@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
@@ -196,7 +196,7 @@ export default function Dashboard() {
     } finally {
       setIsLoading(false);
     }
-  }, [filters.filterEmail, filters.filterName, filters.search]);
+  }, [filters.filterName, filters.filterEmail, filters.search]);
 
   const onDeleteCliente = async () => {
     setIsLoadingDelete(true);
@@ -311,8 +311,8 @@ export default function Dashboard() {
 
       toast.success("Arquivo ZIP baixado com sucesso!");
     } catch (error) {
-      const apiError = error as ApiErrorResponse;
-      toast.error(apiError.message || "Erro ao baixar o arquivo ZIP");
+      const apiError = error as ApiErrorResponse
+      toast.error(apiError.message);
     } finally {
       setIsDownloading(false);
     }

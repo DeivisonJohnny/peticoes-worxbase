@@ -44,7 +44,7 @@ interface listFormsProps {
 const listForms: listFormsProps[] = [
   {
     idForm: "contrato-honorarios",
-    label: "Contrato de Honorarios",
+    label: "Contrato de Honorários",
     completed: "preenchido",
     icon: CircleCheckBig,
     form: (client, idForm, documents) => (
@@ -88,7 +88,7 @@ const listForms: listFormsProps[] = [
   },
   {
     idForm: "procuracao-ppp",
-    label: "Procuração - PPP",
+    label: "Procuração Pessoa Física",
     completed: "preenchido",
     icon: CircleCheckBig,
     form: (client, idForm, documents) => (
@@ -105,8 +105,8 @@ const listForms: listFormsProps[] = [
     },
   },
   {
-    idForm: "auxilio-doenca",
-    label: "Auxilio Doença",
+    idForm: "loas-auxilio-doenca",
+    label: "LOAS - Auxílio-Doença",
     completed: "preenchido",
     icon: CircleCheckBig,
     form: (client, idForm, documents) => (
@@ -124,7 +124,7 @@ const listForms: listFormsProps[] = [
   },
   {
     idForm: "loas-idoso",
-    label: "Loas Idoso",
+    label: "LOAS - Idoso",
     completed: "preenchido",
     icon: CircleCheckBig,
     form: (client, idForm, documents) => (
@@ -142,7 +142,7 @@ const listForms: listFormsProps[] = [
   },
   {
     idForm: "loas-deficiencia",
-    label: "Loas Deficiência",
+    label: "LOAS - Benefício para Deficiente",
     completed: "preenchido",
     icon: CircleCheckBig,
     form: (client, idForm, documents) => (
@@ -183,7 +183,7 @@ const listForms: listFormsProps[] = [
   {
     idForm: "autodeclaracao-rural",
 
-    label: "Autodeclaração rural",
+    label: "Autodeclaração Rural",
     completed: "parcial",
     icon: CircleCheckBig,
     form: (client, idForm, documents) => (
@@ -336,7 +336,7 @@ export default function Documents() {
       </div>
     );
   }
-
+  
   return (
     <main className=" max-w-[1200px] w-full mx-auto pb-[100px] px-5 mt-4 ">
       <div className="w-full flex flex-col justify-center items-center gap-[15px] border-1 border-[#DFDFDF] rounded-[8px] py-[8px] px-[34px] mb-[25px] ">

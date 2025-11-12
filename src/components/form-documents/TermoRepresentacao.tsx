@@ -155,10 +155,10 @@ export default function TermoRepresentacaoForm({
     };
 
     try {
-      const response: { documentId?: string } = await Api.post(
+      const response = await Api.post(
         "/documents/generate",
         body
-      );
+      ) as { documentId?: string };
       if (response?.documentId) {
         generatedDocument(response.documentId);
       }

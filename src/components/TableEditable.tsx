@@ -7,7 +7,7 @@ import {
   TableHeader,
   TableRow,
 } from "./ui/table";
-import { useState } from "react";
+import {  useState } from "react";
 import { Button } from "./ui/button";
 import { Minus, Plus } from "lucide-react";
 import {
@@ -74,7 +74,8 @@ export default function TableEditable({
   const renderCell = (
     col: TableEditableColumnsType,
     value: string,
-    onChange: (v: string) => void
+    onChange: (v: string) => void,
+    rowIndex: number
   ) => {
     switch (col.type) {
       case "select":
@@ -101,7 +102,7 @@ export default function TableEditable({
         return (
           <div className="flex flex-col gap-2 items-start">
             {col.options?.map((opt, i) => {
-              const id = `${col.label}-${i}`;
+              const id = `${name}-${col.label}-${i}-${rowIndex}`;
               return (
                 <div key={opt} className="flex items-center gap-2 ml-2">
                   <CheckboxField
@@ -162,7 +163,8 @@ export default function TableEditable({
                   {renderCell(
                     col[colIndex],
                     values[rowIndex]?.[colIndex] ?? "",
-                    (newVal) => handleChange(rowIndex, colIndex, newVal)
+                    (newVal) => handleChange(rowIndex, colIndex, newVal),
+                    rowIndex
                   )}
                 </Td>
               ))}

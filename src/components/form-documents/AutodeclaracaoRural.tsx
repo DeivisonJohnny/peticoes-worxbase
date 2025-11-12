@@ -10,7 +10,7 @@ import { Checkbox } from "../ui/checkbox";
 import Util from "@/utils/Util";
 import TableEditable from "../TableEditable";
 import { Plus, Trash2 } from "lucide-react";
-import { useEffect, useState } from "react";
+import {  useEffect, useState } from "react";
 import { ClientType, Documento } from "@/pages/dashboard";
 import Api, { ApiErrorResponse } from "@/api";
 import { toast } from "sonner";
@@ -207,10 +207,10 @@ export default function AutodeclaracaoRural({
     };
 
     try {
-      const response: { documentId?: string } = await Api.post(
+      const response = await Api.post(
         "/documents/generate",
         body
-      );
+      ) as { documentId?: string };
       if (response?.documentId) {
         generatedDocument(response.documentId);
       }

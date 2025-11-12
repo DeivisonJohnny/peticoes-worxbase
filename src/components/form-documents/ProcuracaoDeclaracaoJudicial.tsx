@@ -81,10 +81,7 @@ export default function ProcuracaoDeclaracaoJudicial({
         const documentData = doc.lastGenerated.dataSnapshot.document;
         Object.keys(documentData).forEach((key) => {
           if (key in AdJudiciaPowerOfAttorneySchema.fields) {
-            setValue(
-              key as keyof AdJudiciaFormData,
-              documentData[key] as string
-            );
+            setValue(key as keyof AdJudiciaFormData, documentData[key] as string);
           }
         });
       }
@@ -100,10 +97,10 @@ export default function ProcuracaoDeclaracaoJudicial({
     };
 
     try {
-      const response: { documentId?: string } = await Api.post(
+      const response = await Api.post(
         "/documents/generate",
         body
-      );
+      ) as { documentId?: string };
       if (response?.documentId) {
         generatedDocument(response.documentId);
       }
@@ -128,7 +125,7 @@ export default function ProcuracaoDeclaracaoJudicial({
       <div className="max-w-[1200px] w-full mx-auto">
         <Card className="p-0 border-none shadow-none gap-3">
           <CardHeader className="text-[#529FF6] font-[700] text-[24px] px-0">
-            Procuração Ad Judicia e Declaração
+            Procuração Declaração Judicial
           </CardHeader>
           <CardContent className="px-0">
             <form

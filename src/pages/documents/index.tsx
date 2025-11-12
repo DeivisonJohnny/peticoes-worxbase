@@ -6,7 +6,6 @@ import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Search, FileText, ArrowRight } from "lucide-react";
 import { useRouter } from "next/router";
-import SpinLoader from "@/components/SpinLoader";
 import Util from "@/utils/Util";
 
 interface DocumentTemplate {
@@ -76,23 +75,24 @@ const allDocumentTemplates: DocumentTemplate[] = [
 ];
 
 export default function Documents() {
+  const router = useRouter();
   const [documents, setDocuments] =
     useState<DocumentTemplate[]>(allDocumentTemplates);
-  const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const router = useRouter();
 
   useEffect(() => {
-    setIsLoading(true);
-    if (searchTerm === "") {
-      setDocuments(allDocumentTemplates);
-    } else {
-      const filtered = allDocumentTemplates.filter((doc) =>
-        Util.compararStrings(doc.title, searchTerm)
-      );
-      setDocuments(filtered);
-    }
-    setIsLoading(false);
+    const filterDocuments = () => {
+      if (searchTerm === "") {
+        setDocuments(allDocumentTemplates);
+      } else {
+        const filtered = allDocumentTemplates.filter((doc) =>
+          Util.compararStrings(doc.title, searchTerm)
+        );
+        setDocuments(filtered);
+      }
+    };
+
+    filterDocuments();
   }, [searchTerm]);
 
   return (
@@ -114,45 +114,39 @@ export default function Documents() {
             </div>
           </div>
 
-          {isLoading ? (
-            <div className="flex items-center justify-center mt-10">
-              <SpinLoader />
-            </div>
-          ) : (
-            <div className="space-y-2 flex flex-col gap-3 mt-4">
-              {documents.length > 0 ? (
-                documents.map((doc) => (
-                  <div
-                    key={doc.id}
-                    className="flex items-center justify-between py-2 px-4 hover:bg-gray-50 border-[#CCCCCC] border-1 rounded-[8px] shadow-[0px_2px_4px_#0000001A]"
-                  >
-                    <div className="flex items-center space-x-3">
-                      <FileText className="w-5 h-5 text-[#13529C]" />
-                      <div className="flex flex-col">
-                        <span className="text-[16px] text-[#1C3552] font-medium">
-                          {doc.title}
-                        </span>
-                        <span className="text-[14px] text-[#9A9A9A]">
-                          {doc.description}
-                        </span>
-                      </div>
+          <div className="space-y-2 flex flex-col gap-3 mt-4">
+            {documents.length > 0 ? (
+              documents.map((doc) => (
+                <div
+                  key={doc.id}
+                  className="flex items-center justify-between py-2 px-4 hover:bg-gray-50 border-[#CCCCCC] border-1 rounded-[8px] shadow-[0px_2px_4px_#0000001A]"
+                >
+                  <div className="flex items-center space-x-3">
+                    <FileText className="w-5 h-5 text-[#13529C]" />
+                    <div className="flex flex-col">
+                      <span className="text-[16px] text-[#1C3552] font-medium">
+                        {doc.title}
+                      </span>
+                      <span className="text-[14px] text-[#9A9A9A]">
+                        {doc.description}
+                      </span>
                     </div>
-                    <Button
-                      variant="ghost"
-                      className="text-[#13529C] bg-[#529FF626] px-3 py-1 text-[14px] rounded-[50px] font-medium flex items-center gap-2 cursor-pointer hover:bg-[#529FF640] h-auto"
-                      onClick={() => router.push("/dashboard")}
-                    >
-                      Gerar <ArrowRight width={14} />
-                    </Button>
                   </div>
-                ))
-              ) : (
-                <p className="text-center text-gray-500 mt-10">
-                  Nenhum documento encontrado.
-                </p>
-              )}
-            </div>
-          )}
+                  <Button
+                    variant="ghost"
+                    className="text-[#13529C] bg-[#529FF626] px-3 py-1 text-[14px] rounded-[50px] font-medium flex items-center gap-2 cursor-pointer hover:bg-[#529FF640] h-auto"
+                    onClick={() => router.push("/dashboard")}
+                  >
+                    Gerar <ArrowRight width={14} />
+                  </Button>
+                </div>
+              ))
+            ) : (
+              <p className="text-center text-gray-500 mt-10">
+                Nenhum documento encontrado.
+              </p>
+            )}
+          </div>
         </Card>
       </div>
     </div>
