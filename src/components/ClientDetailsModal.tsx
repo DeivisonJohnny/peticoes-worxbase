@@ -178,12 +178,6 @@ export default function ClientDetailsModal({
               </div>
             )}
             <div className="grid grid-cols-4 items-center gap-4">
-              <span className="text-sm font-medium col-span-1">Status:</span>
-              <span className="text-sm col-span-3">
-                {clientDetails.isActive ? "Ativo" : "Inativo"}
-              </span>
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
               <span className="text-sm font-medium col-span-1">Criado em:</span>
               <span className="text-sm col-span-3">
                 {new Date(clientDetails.createdAt!).toLocaleString()}

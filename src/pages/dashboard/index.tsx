@@ -13,6 +13,8 @@ import {
   Plus,
   Check,
   Loader2,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import { Divider } from "antd";
 import {
@@ -173,6 +175,10 @@ export default function Dashboard() {
     filterEmail: false,
     search: "",
   });
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalClients, setTotalClients] = useState(0);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
 
   const router = useRouter();
 
@@ -196,6 +202,19 @@ export default function Dashboard() {
       ...prev,
       [field]: checked,
     }));
+    setCurrentPage(1);
+  };
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage((prev) => prev + 1);
+    }
+  };
+
+  const handlePreviousPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage((prev) => prev - 1);
+    }
   };
 
   const fetchData = useCallback(async () => {
@@ -205,13 +224,24 @@ export default function Dashboard() {
       if (filters.filterName) params.append("name", filters.search);
       if (filters.filterEmail) params.append("email", filters.search);
 
+      params.append("page", currentPage.toString());
+      params.append("limit", itemsPerPage.toString());
+
       const query = params.toString() ? `?${params.toString()}` : "";
 
-      const res: { data: ClientType[]; meta: object } = await Api.get(
-        `/clients${query}`
-      );
+      const res: {
+        data: ClientType[];
+        meta: {
+          total: number;
+          page: number;
+          limit: number;
+          totalPages: number;
+        };
+      } = await Api.get(`/clients${query}`);
 
       setClients(res.data);
+      setTotalPages(res.meta.totalPages);
+      setTotalClients(res.meta.total);
     } catch (error) {
       const apiError = error as ApiErrorResponse;
       console.error("Erro capturado no componente:", apiError);
@@ -219,7 +249,7 @@ export default function Dashboard() {
     } finally {
       setIsLoading(false);
     }
-  }, [filters.filterName, filters.filterEmail, filters.search]);
+  }, [filters.filterName, filters.filterEmail, filters.search, currentPage, itemsPerPage]);
 
   const onDeleteCliente = async () => {
     setIsLoadingDelete(true);
@@ -292,6 +322,10 @@ export default function Dashboard() {
   useEffect(() => {
     fetchDocuments();
   }, [fetchDocuments]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filters.search]);
 
   const downloadDocuments = async () => {
     setIsDownloading(true);
@@ -550,6 +584,54 @@ export default function Dashboard() {
                       </div>
                     </div>
                   ))}
+              </div>
+
+              <div className="flex items-center justify-between mt-4 px-2">
+                <div className="flex items-center gap-3">
+                  <span className="text-[14px] text-[#6B7280]">
+                    Página {currentPage} de {totalPages} ({totalClients} clientes)
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[14px] text-[#6B7280]">Exibir:</span>
+                    <select
+                      value={itemsPerPage}
+                      onChange={(e) => {
+                        setItemsPerPage(Number(e.target.value));
+                        setCurrentPage(1);
+                      }}
+                      className="text-[14px] text-[#374151] bg-[#F3F4F6] border-none rounded-[6px] px-2 py-1 cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#529FF6]"
+                    >
+                      <option value={5}>5</option>
+                      <option value={10}>10</option>
+                      <option value={20}>20</option>
+                      <option value={50}>50</option>
+                    </select>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={handlePreviousPage}
+                    disabled={currentPage === 1}
+                    className={`w-9 h-9 rounded-[6px] flex items-center justify-center transition-colors ${
+                      currentPage === 1
+                        ? "bg-[#E5E7EB] cursor-not-allowed"
+                        : "bg-[#F3F4F6] hover:bg-[#E5E7EB] cursor-pointer"
+                    }`}
+                  >
+                    <ChevronLeft className={`h-5 w-5 ${currentPage === 1 ? "text-[#9CA3AF]" : "text-[#374151]"}`} />
+                  </button>
+                  <button
+                    onClick={handleNextPage}
+                    disabled={currentPage === totalPages}
+                    className={`w-9 h-9 rounded-[6px] flex items-center justify-center transition-colors ${
+                      currentPage === totalPages
+                        ? "bg-[#E5E7EB] cursor-not-allowed"
+                        : "bg-[#F3F4F6] hover:bg-[#E5E7EB] cursor-pointer"
+                    }`}
+                  >
+                    <ChevronRight className={`h-5 w-5 ${currentPage === totalPages ? "text-[#9CA3AF]" : "text-[#374151]"}`} />
+                  </button>
+                </div>
               </div>
             </div>
           </Card>

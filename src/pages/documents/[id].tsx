@@ -329,6 +329,21 @@ export default function Documents() {
     }
   }, [id]);
 
+  useEffect(() => {
+    if (documents.length > 0 && listForms.length > 0) {
+      const firstForm = listForms[0];
+      const firstDoc = documents.find((d) =>
+        Util.compararStrings(firstForm.label, d.title)
+      );
+
+      setFormIsShown({
+        idForm: firstDoc?.templateId || firstForm.idForm,
+        componentRenderer: firstForm.form,
+        label: firstForm.label,
+      });
+    }
+  }, [documents]);
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -339,17 +354,17 @@ export default function Documents() {
   
   return (
     <main className=" max-w-[1200px] w-full mx-auto pb-[100px] px-5 mt-4 ">
-      <div className="w-full flex flex-col justify-center items-center gap-[15px] border-1 border-[#DFDFDF] rounded-[8px] py-[8px] px-[34px] mb-[25px] ">
+      <div className="w-full flex flex-col justify-center items-center gap-[15px] border border-[#DFDFDF] rounded-xl py-2 px-[34px] mb-[25px] ">
         <p className=" text-[14px] text-[#529FF6] ">
           {listForms.find((f) => f.idForm === formIsShown.idForm)?.label ||
             "Documento"}
         </p>
-        <div className="flex flex-row items-center gap-[10px]">
+        <div className="flex flex-row items-center gap-2.5">
           <Ball className="active" />
           <Ball />
           <Ball />
         </div>
-        <p className=" text-[12px] text-[#529FF6] font-[300] ">
+        <p className=" text-[12px] text-[#529FF6] font-light ">
           Documento 1 de {listForms.length}
         </p>
       </div>
@@ -360,7 +375,7 @@ export default function Documents() {
 
       <Divider />
       <div className=" flex flex-col gap-4 ">
-        <p className="text-[#529FF6] font-[700] text-[24px] px-0">
+        <p className="text-[#529FF6] font-bold text-[24px] px-0">
           Próximos docs
         </p>
 
@@ -391,7 +406,7 @@ export default function Documents() {
             return (
               <Button
                 key={item.idForm}
-                className=" bg-[#F5F5F5] text-[#1C3552] text-[16px] flex flex-row items-center justify-between  w-full rounded-[8px] h-[40px] cursor-pointer  hover:bg-[#E1E1E1]  "
+                className=" bg-[#F5F5F5] text-[#1C3552] text-[16px] flex flex-row items-center justify-between  w-full rounded-xl h-10 cursor-pointer  hover:bg-[#E1E1E1]  "
                 onClick={() =>
                   handleFormChange({
                     idForm: doc?.templateId || item.idForm,
@@ -402,7 +417,7 @@ export default function Documents() {
               >
                 <div className=" flex flex-row items-center gap-2 ">
                   <IconDynamic {...item.propsIcon} />
-                  <span className=" text-[#13529C]  text-[16px] font-[400]  ">
+                  <span className=" text-[#13529C]  text-[16px] font-normal  ">
                     {item.label}
                   </span>
                 </div>

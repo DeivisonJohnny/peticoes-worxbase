@@ -51,7 +51,7 @@ Api.interceptors.response.use(
           if (!isPublicPath) {
             toast.error(`Sessão expirada! Faça o login novamente.`);
             console.warn("Sessão expirada. Redirecionando para login...");
-            window.location.href = "/auth/login";
+            window.location.href = "/";
           }
         }
       }

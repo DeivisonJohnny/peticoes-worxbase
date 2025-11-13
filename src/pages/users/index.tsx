@@ -1,11 +1,11 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Search, Filter, Eye, Pencil } from "lucide-react";
+import { Search, Filter, EllipsisVertical, Pencil } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,22 +15,9 @@ import {
 
 import { useRouter } from "next/router";
 
-interface ClientType {
+interface UserType {
   id: string;
-  name: string;
-  cpf: string | null;
-  cnpj: string | null;
-  address: string | null;
-  phone: string | null;
-  dateOfBirth: string | null;
-  rg: string | null;
-  maritalStatus: string | null;
-  birthPlace: string | null;
-  rgIssuer: string | null;
-  nickname: string | null;
-  nationality: string | null;
-  motherName: string | null;
-  occupation: string | null;
+  name: string | null;
   email: string | null;
   isActive: boolean;
   createdAt: string;
@@ -39,27 +26,23 @@ interface ClientType {
 }
 
 import Api, { ApiErrorResponse } from "@/api";
-import { toast } from "sonner";
-
-import ClientDetailsModal from "@/components/ClientDetailsModal";
 import { FilterType } from "../dashboard";
 import { Divider } from "antd";
+import { toast } from "sonner";
 import ClientItemSkeleton from "@/components/ClientItemSkeleton";
 
-export default function Clients() {
-  const [clients, setClients] = useState<ClientType[]>([]);
+export default function Users() {
+  const [users, setUsers] = useState<UserType[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [showDetailsModal, setShowDetailsModal] = useState(false);
-  const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
   const [filters, setFilters] = useState<FilterType>({
     filterName: false,
     filterEmail: false,
     search: "",
   });
 
-  const toggleClient = (id: string, checked: boolean) => {
-    setClients((prev) =>
-      prev.map((client) => (client.id === id ? { ...client, checked } : client))
+  const toggleUser = (id: string, checked: boolean) => {
+    setUsers((prev) =>
+      prev.map((user) => (user.id === id ? { ...user, checked } : user))
     );
   };
 
@@ -75,21 +58,21 @@ export default function Clients() {
 
       const query = params.toString() ? `?${params.toString()}` : "";
 
-      const res: { data: ClientType[]; meta: object } = await Api.get(
-        `/clients${query}`
-      );
+      const usersData = await Api.get(
+        `/users${query}`
+      ) as UserType[] 
 
-      const clientsWithCheckbox = res.data.map((client) => ({
-        ...client,
+      const usersWithCheckbox = usersData.map((user) => ({
+        ...user,
         checked: false,
       }));
 
-      setClients(clientsWithCheckbox);
+      setUsers(usersWithCheckbox);
     } catch (error) {
       const apiError = error as ApiErrorResponse;
       console.error("Erro capturado no componente:", apiError);
       toast.error(`Erro inesperado: ${apiError.message}`);
-      setClients([]);
+      setUsers([]);
     } finally {
       setIsLoading(false);
     }
@@ -107,25 +90,15 @@ export default function Clients() {
     fetchData();
   }, [fetchData]);
 
-  const handleViewDetails = (clientId: string) => {
-    setSelectedClientId(clientId);
-    setShowDetailsModal(true);
-  };
-
-  const handleCloseDetailsModal = () => {
-    setShowDetailsModal(false);
-    setSelectedClientId(null);
-  };
-
   return (
-    <div className="min-h-screen p-0 w-[100%]">
+    <div className="min-h-screen p-0 w-full">
       <div className="max-w-[70%] w-full mx-auto">
         <Card className=" border-none shadow-none gap-5">
-          <h2 className="text-[24px] font-medium text-[#1C3552]">Clientes</h2>
+          <h2 className="text-[24px] font-medium text-[#1C3552]">Usuários</h2>
           <div className="flex gap-2">
             <div className="relative flex-1 max-w-[400px]">
               <Input
-                placeholder="Pesquisar cliente..."
+                placeholder="Pesquisar usuário..."
                 className="pl-[15px] text-sm rounded-[50px]"
                 value={filters.search}
                 onChange={(e) =>
@@ -196,55 +169,71 @@ export default function Clients() {
           </div>
           {isLoading ? (
             <div className="space-y-1 flex flex-col gap-2 mt-4">
-              {[...Array(5)].map((_, i) => (
+              {[...Array(3)].map((_, i) => (
                 <ClientItemSkeleton key={i} />
               ))}
             </div>
           ) : (
             <div className="space-y-1 flex flex-col gap-2">
-              {clients.map((client) => (
+              {users?.length > 0 && users?.map((user) => (
                 <div
-                  key={client.id}
-                  className="flex items-center justify-between py-1 px-3 hover:bg-gray-50 cursor-pointer border-[#CCCCCC] border-1 rounded-[8px] shadow-[0px_2px_4px_#0000001A]"
+                  key={user.id}
+                  className="flex items-center justify-between py-1 px-3 hover:bg-gray-50 cursor-pointer border-[#CCCCCC] border rounded-xl shadow-[0px_2px_4px_#0000001A]"
                 >
-                  <div className="flex items-center space-x-2 rounded-[8px] py-[5px]">
+                  <div className="flex items-center space-x-2 rounded-xl py-[5px]">
                     <Checkbox
-                      id={client.id}
-                      checked={client.checked}
+                      id={user.id}
+                      checked={user.checked}
                       onCheckedChange={(checked) =>
-                        toggleClient(client.id, checked as boolean)
+                        toggleUser(user.id, checked as boolean)
                       }
                       className="w-[17px] h-[17px]"
                     />
                     <div className="flex flex-col">
                       <label
-                        htmlFor={client.id}
+                        htmlFor={user.id}
                         className="text-[16px] text-[#1C3552] cursor-pointer font-medium"
                       >
-                        {client.name}
+                        {user.name || "Usuário sem nome"}
                       </label>
                       <div className="flex gap-3 text-[14px] text-[#9A9A9A]">
-                        {client.cpf && <span>CPF: **{client.cpf}**</span>}
-                        {client.email && <span>{client.email}</span>}
-                        {client.address && <span>{client.address}</span>}
+                        {user.email && <span>{user.email}</span>}
                       </div>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
                     <span
-                      className="text-[#13529C] bg-[#EFEFEF] px-[9px] py-[1px] text-[14px] rounded-[50px] font-medium flex flex-row items-center flex-nowrap gap-[5px] cursor-pointer"
-                      onClick={() => handleViewDetails(client.id)}
+                      className={`px-3 py-0.5 text-[14px] rounded-[50px] font-medium ${
+                        user.isActive
+                          ? "text-[#13529C] bg-[#529FF626]"
+                          : "text-[#95A5A6] bg-[#EFEFEF]"
+                      }`} 
                     >
-                      Ver detalhes <Eye width={16} color="#13529C" />
+                      {user.isActive ? "Ativo" : "Inativo"}
                     </span>
                     <span
-                      className="text-[#13529C] bg-[#529FF626] px-[9px] py-[1px] text-[14px] rounded-[50px] font-medium flex flex-row items-center flex-nowrap gap-[5px] mr-[25px] cursor-pointer"
-                      onClick={() => router.push(`/clients/${client.id}`)}
+                      className="text-[#13529C] bg-[#529FF626] px-[9px] py-px text-[14px] rounded-[50px] font-medium flex flex-row items-center flex-nowrap gap-[5px] cursor-pointer"
+                      onClick={() => router.push(`/users/${user.id}`)}
                     >
                       Editar <Pencil width={14} />
                     </span>
-                
-                
+                    <DropdownMenu>
+                      <DropdownMenuTrigger>
+                        <EllipsisVertical className="w-4 h-4 text-blue-600" />
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent
+                        side="bottom"
+                        align="end"
+                        className="rounded-[12px] rounded-tr-none"
+                      >
+                        <DropdownMenuItem className="text-[#1C3552] text-[14px]">
+                          Excluir
+                        </DropdownMenuItem>
+                        <DropdownMenuItem className="text-[#1C3552] text-[14px]" onClick={() => { /* Lógica para desativar */ }}>
+                          {user.isActive ? 'Desativar' : 'Ativar'}
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </div>
                 </div>
               ))}
@@ -252,11 +241,6 @@ export default function Clients() {
           )}
         </Card>
       </div>
-      <ClientDetailsModal
-        clientId={selectedClientId}
-        isOpen={showDetailsModal}
-        onClose={handleCloseDetailsModal}
-      />
     </div>
   );
 }

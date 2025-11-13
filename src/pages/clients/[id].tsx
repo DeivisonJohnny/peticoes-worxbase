@@ -91,12 +91,14 @@ export default function RegisterOrUpdateClient() {
       if (isNew) {
         const newClient: ClientType = await Api.post("/clients", bodySend);
         toast.success(`Cliente ${newClient.name} cadastrado com sucesso!`);
+        router.push("/clients");
       } else {
         const newClient: ClientType = await Api.patch(
           `/clients/${id}`,
           bodySend
         );
         toast.success(`Cliente ${newClient.name} atualizado com sucesso!`);
+        router.push("/clients");
       }
     } catch (error) {
       const apiError = error as ApiErrorResponse;
