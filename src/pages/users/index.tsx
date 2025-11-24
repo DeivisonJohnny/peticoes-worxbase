@@ -58,11 +58,9 @@ export default function Users() {
 
       const query = params.toString() ? `?${params.toString()}` : "";
 
-      const usersData = await Api.get(
-        `/users${query}`
-      ) as UserType[] 
+      const usersData = await Api.get<UserType[]>(`/users${query}`);
 
-      const usersWithCheckbox = usersData.map((user) => ({
+      const usersWithCheckbox = usersData.data.map((user) => ({
         ...user,
         checked: false,
       }));
@@ -175,68 +173,74 @@ export default function Users() {
             </div>
           ) : (
             <div className="space-y-1 flex flex-col gap-2">
-              {users?.length > 0 && users?.map((user) => (
-                <div
-                  key={user.id}
-                  className="flex items-center justify-between py-1 px-3 hover:bg-gray-50 cursor-pointer border-[#CCCCCC] border rounded-xl shadow-[0px_2px_4px_#0000001A]"
-                >
-                  <div className="flex items-center space-x-2 rounded-xl py-[5px]">
-                    <Checkbox
-                      id={user.id}
-                      checked={user.checked}
-                      onCheckedChange={(checked) =>
-                        toggleUser(user.id, checked as boolean)
-                      }
-                      className="w-[17px] h-[17px]"
-                    />
-                    <div className="flex flex-col">
-                      <label
-                        htmlFor={user.id}
-                        className="text-[16px] text-[#1C3552] cursor-pointer font-medium"
-                      >
-                        {user.name || "Usuário sem nome"}
-                      </label>
-                      <div className="flex gap-3 text-[14px] text-[#9A9A9A]">
-                        {user.email && <span>{user.email}</span>}
+              {users?.length > 0 &&
+                users?.map((user) => (
+                  <div
+                    key={user.id}
+                    className="flex items-center justify-between py-1 px-3 hover:bg-gray-50 cursor-pointer border-[#CCCCCC] border rounded-xl shadow-[0px_2px_4px_#0000001A]"
+                  >
+                    <div className="flex items-center space-x-2 rounded-xl py-[5px]">
+                      <Checkbox
+                        id={user.id}
+                        checked={user.checked}
+                        onCheckedChange={(checked) =>
+                          toggleUser(user.id, checked as boolean)
+                        }
+                        className="w-[17px] h-[17px]"
+                      />
+                      <div className="flex flex-col">
+                        <label
+                          htmlFor={user.id}
+                          className="text-[16px] text-[#1C3552] cursor-pointer font-medium"
+                        >
+                          {user.name || "Usuário sem nome"}
+                        </label>
+                        <div className="flex gap-3 text-[14px] text-[#9A9A9A]">
+                          {user.email && <span>{user.email}</span>}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span
-                      className={`px-3 py-0.5 text-[14px] rounded-[50px] font-medium ${
-                        user.isActive
-                          ? "text-[#13529C] bg-[#529FF626]"
-                          : "text-[#95A5A6] bg-[#EFEFEF]"
-                      }`} 
-                    >
-                      {user.isActive ? "Ativo" : "Inativo"}
-                    </span>
-                    <span
-                      className="text-[#13529C] bg-[#529FF626] px-[9px] py-px text-[14px] rounded-[50px] font-medium flex flex-row items-center flex-nowrap gap-[5px] cursor-pointer"
-                      onClick={() => router.push(`/users/${user.id}`)}
-                    >
-                      Editar <Pencil width={14} />
-                    </span>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger>
-                        <EllipsisVertical className="w-4 h-4 text-blue-600" />
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent
-                        side="bottom"
-                        align="end"
-                        className="rounded-[12px] rounded-tr-none"
+                    <div className="flex items-center gap-2">
+                      <span
+                        className={`px-3 py-0.5 text-[14px] rounded-[50px] font-medium ${
+                          user.isActive
+                            ? "text-[#13529C] bg-[#529FF626]"
+                            : "text-[#95A5A6] bg-[#EFEFEF]"
+                        }`}
                       >
-                        <DropdownMenuItem className="text-[#1C3552] text-[14px]">
-                          Excluir
-                        </DropdownMenuItem>
-                        <DropdownMenuItem className="text-[#1C3552] text-[14px]" onClick={() => { /* Lógica para desativar */ }}>
-                          {user.isActive ? 'Desativar' : 'Ativar'}
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                        {user.isActive ? "Ativo" : "Inativo"}
+                      </span>
+                      <span
+                        className="text-[#13529C] bg-[#529FF626] px-[9px] py-px text-[14px] rounded-[50px] font-medium flex flex-row items-center flex-nowrap gap-[5px] cursor-pointer"
+                        onClick={() => router.push(`/users/${user.id}`)}
+                      >
+                        Editar <Pencil width={14} />
+                      </span>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger>
+                          <EllipsisVertical className="w-4 h-4 text-blue-600" />
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent
+                          side="bottom"
+                          align="end"
+                          className="rounded-[12px] rounded-tr-none"
+                        >
+                          <DropdownMenuItem className="text-[#1C3552] text-[14px]">
+                            Excluir
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            className="text-[#1C3552] text-[14px]"
+                            onClick={() => {
+                              /* Lógica para desativar */
+                            }}
+                          >
+                            {user.isActive ? "Desativar" : "Ativar"}
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))}
             </div>
           )}
         </Card>
