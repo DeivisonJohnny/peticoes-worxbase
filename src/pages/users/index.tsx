@@ -14,6 +14,14 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 import { useRouter } from "next/router";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 interface UserType {
   id: string;
@@ -39,6 +47,10 @@ export default function Users() {
     filterEmail: false,
     search: "",
   });
+  const [userToDelete, setUserToDelete] = useState<{
+    id: string;
+    name: string;
+  } | null>(null);
 
   const toggleUser = (id: string, checked: boolean) => {
     setUsers((prev) =>
@@ -47,6 +59,20 @@ export default function Users() {
   };
 
   const router = useRouter();
+
+  const handleDeleteUser = async () => {
+    if (!userToDelete) return;
+
+    try {
+      await Api.delete(`/users/${userToDelete.id}`);
+      toast.success(`Usuário ${userToDelete.name} excluído com sucesso!`);
+      setUserToDelete(null);
+      fetchData();
+    } catch (error) {
+      const apiError = error as ApiErrorResponse;
+      toast.error(`Erro ao excluir usuário: ${apiError.message}`);
+    }
+  };
 
   const fetchData = useCallback(async () => {
     setIsLoading(true);
@@ -225,16 +251,16 @@ export default function Users() {
                           align="end"
                           className="rounded-[12px] rounded-tr-none"
                         >
-                          <DropdownMenuItem className="text-[#1C3552] text-[14px]">
-                            Excluir
-                          </DropdownMenuItem>
                           <DropdownMenuItem
-                            className="text-[#1C3552] text-[14px]"
-                            onClick={() => {
-                              /* Lógica para desativar */
-                            }}
+                            className="text-red-600 text-[14px] cursor-pointer"
+                            onClick={() =>
+                              setUserToDelete({
+                                id: user.id,
+                                name: user.name || "Usuário",
+                              })
+                            }
                           >
-                            {user.isActive ? "Desativar" : "Ativar"}
+                            Excluir
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
@@ -245,6 +271,34 @@ export default function Users() {
           )}
         </Card>
       </div>
+
+      <Dialog open={!!userToDelete} onOpenChange={() => setUserToDelete(null)}>
+        <DialogContent className="sm:max-w-[425px] bg-white text-black">
+          <DialogHeader>
+            <DialogTitle className="text-[#1C3552] text-[20px] font-semibold">
+              Confirmar exclusão
+            </DialogTitle>
+            <DialogDescription className="text-[#9A9A9A] text-[14px]">
+              Tem certeza que deseja excluir o usuário &quot;{userToDelete?.name}
+              &quot;? Esta ação não pode ser desfeita.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2  ">
+            <Button
+              onClick={() => setUserToDelete(null)}
+              className="bg-[#F5F5F5] text-[#1C3552] hover:bg-[#E5E5E5] border-none rounded-[8px] px-8 font-medium"
+            >
+              Cancelar
+            </Button>
+            <Button
+              onClick={handleDeleteUser}
+              className="bg-red-600 hover:bg-red-700 text-white border-none rounded-[8px] px-8 font-medium"
+            >
+              Excluir
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
