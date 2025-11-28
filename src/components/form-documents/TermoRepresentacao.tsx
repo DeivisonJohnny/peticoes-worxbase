@@ -141,7 +141,6 @@ export default function TermoRepresentacaoForm({
       setValue("representedName", client.name || "");
       setValue("representedCpf", client.cpf || "");
       setValue("representedRg", client.rg || "");
-      // O endereço do cliente é uma string única, preenchendo o campo de endereço principal.
       setValue("representedAddress", client.address || "");
     }
   }, [client, setValue]);

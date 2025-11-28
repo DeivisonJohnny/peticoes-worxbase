@@ -121,6 +121,14 @@ export default function DeclaracaoNaoRecebimentoForm({
   const originatingEntity = watch("originatingEntity") || [];
 
   useEffect(() => {
+    if (client) {
+      setValue("fullName", client.name || "");
+      setValue("cpf", client.cpf || "");
+      setValue("rg", client.rg || "");
+    }
+  }, [client, setValue]);
+
+  useEffect(() => {
     if (receivesRetirementPension === "nao") {
       const fieldsToReset: (keyof StatementFormData)[] = [
         "benefitType",

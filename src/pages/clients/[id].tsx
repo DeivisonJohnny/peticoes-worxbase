@@ -1,5 +1,5 @@
-"use client";
 
+"use client";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
@@ -25,7 +25,24 @@ function formatPhone(value: string) {
   }
 }
 
-const schema = yup.object({
+type FormData = {
+  name: string;
+  cpforcnpj: string;
+  address: string;
+  email: string;
+  phone: string;
+  dateOfBirth?: string;
+  rg?: string;
+  maritalStatus?: string;
+  birthPlace?: string;
+  rgIssuer?: string;
+  nickname?: string;
+  nationality?: string;
+  motherName?: string;
+  occupation?: string;
+};
+
+const schema = yup.object().shape({
   name: yup
     .string()
     .min(3, "O campo deve ter ao menos 3 caracteres")
@@ -54,9 +71,16 @@ const schema = yup.object({
       const digits = value.replace(/\D/g, "");
       return digits.length >= 10 && digits.length <= 11;
     }),
+  dateOfBirth: yup.string(),
+  rg: yup.string(),
+  maritalStatus: yup.string(),
+  birthPlace: yup.string(),
+  rgIssuer: yup.string(),
+  nickname: yup.string(),
+  nationality: yup.string(),
+  motherName: yup.string(),
+  occupation: yup.string(),
 });
-
-type FormData = yup.InferType<typeof schema>;
 
 export default function RegisterOrUpdateClient() {
   const [isLoading, setIsLoading] = useState(false);
@@ -74,7 +98,8 @@ export default function RegisterOrUpdateClient() {
     setValue,
     formState: { errors },
   } = useForm<FormData>({
-    resolver: yupResolver(schema),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    resolver: yupResolver(schema) as any,
     mode: "onChange",
   });
 
@@ -125,6 +150,15 @@ export default function RegisterOrUpdateClient() {
         setValue("cpforcnpj", client.cpf || client.cnpj || "");
         setValue("phone", client.phone ? formatPhone(client.phone) : "");
         setValue("email", client.email || "");
+        setValue("dateOfBirth", client.dateOfBirth ? (typeof client.dateOfBirth === 'string' ? client.dateOfBirth : new Date(client.dateOfBirth).toISOString().split('T')[0]) : "");
+        setValue("rg", client.rg || "");
+        setValue("maritalStatus", client.maritalStatus || "");
+        setValue("birthPlace", client.birthPlace || "");
+        setValue("rgIssuer", client.rgIssuer || "");
+        setValue("nickname", client.nickname || "");
+        setValue("nationality", client.nationality || "");
+        setValue("motherName", client.motherName || "");
+        setValue("occupation", client.occupation || "");
       } catch (error) {
         const apiError = error as ApiErrorResponse;
         console.log("🚀 ~ fetchClient ~ error:", error);
@@ -267,6 +301,177 @@ export default function RegisterOrUpdateClient() {
               />
               {errors.phone && (
                 <p className="text-red-500 text-sm">{errors.phone.message}</p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="dateOfBirth" className="font-medium text-[#1C3552]">
+                Data de nascimento
+              </Label>
+              <Input
+                id="dateOfBirth"
+                type="date"
+                {...register("dateOfBirth")}
+                className={` focus-visible:ring-[0px] rounded-[8px] w-full p-4 placeholder:text-[#CCCCCC] placeholder:italic ${
+                  errors.dateOfBirth
+                    ? errorClass
+                    : " border-[1px] focus-visible:border-[#00a2ffa3] focus-visible:shadow-[0_0_15px_-4px_#0066ffa2]"
+                }`}
+              />
+              {errors.dateOfBirth && (
+                <p className="text-red-500 text-sm">{errors.dateOfBirth.message}</p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="rg" className="font-medium text-[#1C3552]">
+                RG
+              </Label>
+              <Input
+                id="rg"
+                {...register("rg")}
+                className={` focus-visible:ring-[0px] rounded-[8px] w-full p-4 placeholder:text-[#CCCCCC] placeholder:italic ${
+                  errors.rg
+                    ? errorClass
+                    : " border-[1px] focus-visible:border-[#00a2ffa3] focus-visible:shadow-[0_0_15px_-4px_#0066ffa2]"
+                }`}
+                placeholder="Digite aqui..."
+              />
+              {errors.rg && (
+                <p className="text-red-500 text-sm">{errors.rg.message}</p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="rgIssuer" className="font-medium text-[#1C3552]">
+                Órgão emissor do RG
+              </Label>
+              <Input
+                id="rgIssuer"
+                {...register("rgIssuer")}
+                className={` focus-visible:ring-[0px] rounded-[8px] w-full p-4 placeholder:text-[#CCCCCC] placeholder:italic ${
+                  errors.rgIssuer
+                    ? errorClass
+                    : " border-[1px] focus-visible:border-[#00a2ffa3] focus-visible:shadow-[0_0_15px_-4px_#0066ffa2]"
+                }`}
+                placeholder="Digite aqui..."
+              />
+              {errors.rgIssuer && (
+                <p className="text-red-500 text-sm">{errors.rgIssuer.message}</p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="maritalStatus" className="font-medium text-[#1C3552]">
+                Estado civil
+              </Label>
+              <Input
+                id="maritalStatus"
+                {...register("maritalStatus")}
+                className={` focus-visible:ring-[0px] rounded-[8px] w-full p-4 placeholder:text-[#CCCCCC] placeholder:italic ${
+                  errors.maritalStatus
+                    ? errorClass
+                    : " border-[1px] focus-visible:border-[#00a2ffa3] focus-visible:shadow-[0_0_15px_-4px_#0066ffa2]"
+                }`}
+                placeholder="Digite aqui..."
+              />
+              {errors.maritalStatus && (
+                <p className="text-red-500 text-sm">{errors.maritalStatus.message}</p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="birthPlace" className="font-medium text-[#1C3552]">
+                Naturalidade
+              </Label>
+              <Input
+                id="birthPlace"
+                {...register("birthPlace")}
+                className={` focus-visible:ring-[0px] rounded-[8px] w-full p-4 placeholder:text-[#CCCCCC] placeholder:italic ${
+                  errors.birthPlace
+                    ? errorClass
+                    : " border-[1px] focus-visible:border-[#00a2ffa3] focus-visible:shadow-[0_0_15px_-4px_#0066ffa2]"
+                }`}
+                placeholder="Digite aqui..."
+              />
+              {errors.birthPlace && (
+                <p className="text-red-500 text-sm">{errors.birthPlace.message}</p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="nationality" className="font-medium text-[#1C3552]">
+                Nacionalidade
+              </Label>
+              <Input
+                id="nationality"
+                {...register("nationality")}
+                className={` focus-visible:ring-[0px] rounded-[8px] w-full p-4 placeholder:text-[#CCCCCC] placeholder:italic ${
+                  errors.nationality
+                    ? errorClass
+                    : " border-[1px] focus-visible:border-[#00a2ffa3] focus-visible:shadow-[0_0_15px_-4px_#0066ffa2]"
+                }`}
+                placeholder="Digite aqui..."
+              />
+              {errors.nationality && (
+                <p className="text-red-500 text-sm">{errors.nationality.message}</p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="nickname" className="font-medium text-[#1C3552]">
+                Apelido
+              </Label>
+              <Input
+                id="nickname"
+                {...register("nickname")}
+                className={` focus-visible:ring-[0px] rounded-[8px] w-full p-4 placeholder:text-[#CCCCCC] placeholder:italic ${
+                  errors.nickname
+                    ? errorClass
+                    : " border-[1px] focus-visible:border-[#00a2ffa3] focus-visible:shadow-[0_0_15px_-4px_#0066ffa2]"
+                }`}
+                placeholder="Digite aqui..."
+              />
+              {errors.nickname && (
+                <p className="text-red-500 text-sm">{errors.nickname.message}</p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="motherName" className="font-medium text-[#1C3552]">
+                Nome da mãe
+              </Label>
+              <Input
+                id="motherName"
+                {...register("motherName")}
+                className={` focus-visible:ring-[0px] rounded-[8px] w-full p-4 placeholder:text-[#CCCCCC] placeholder:italic ${
+                  errors.motherName
+                    ? errorClass
+                    : " border-[1px] focus-visible:border-[#00a2ffa3] focus-visible:shadow-[0_0_15px_-4px_#0066ffa2]"
+                }`}
+                placeholder="Digite aqui..."
+              />
+              {errors.motherName && (
+                <p className="text-red-500 text-sm">{errors.motherName.message}</p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="occupation" className="font-medium text-[#1C3552]">
+                Profissão
+              </Label>
+              <Input
+                id="occupation"
+                {...register("occupation")}
+                className={` focus-visible:ring-[0px] rounded-[8px] w-full p-4 placeholder:text-[#CCCCCC] placeholder:italic ${
+                  errors.occupation
+                    ? errorClass
+                    : " border-[1px] focus-visible:border-[#00a2ffa3] focus-visible:shadow-[0_0_15px_-4px_#0066ffa2]"
+                }`}
+                placeholder="Digite aqui..."
+              />
+              {errors.occupation && (
+                <p className="text-red-500 text-sm">{errors.occupation.message}</p>
               )}
             </div>
 

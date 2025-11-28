@@ -197,7 +197,6 @@ export default function ProcuracaoInssForm({
       setValue("grantorMaritalStatus", client.maritalStatus || "");
       setValue("grantorIdentity", client.rg || "");
       setValue("grantorProfession", client.occupation || "");
-
       setValue("grantorAddress", client.address || "");
     }
   }, [client, setValue]);

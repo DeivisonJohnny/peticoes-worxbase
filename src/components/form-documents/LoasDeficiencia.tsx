@@ -105,7 +105,6 @@ export default function LoasDeficiencia({
       );
       setValue("cpf", client.cpf || "");
       setValue("phone", client.phone || "");
-      // O endereço do cliente é uma string única, preenchendo o campo de rua.
       setValue("street", client.address || "");
     }
   }, [client, setValue]);

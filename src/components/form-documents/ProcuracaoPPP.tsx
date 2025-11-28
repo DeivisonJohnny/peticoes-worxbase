@@ -70,7 +70,6 @@ export default function PppPowerOfAttorneyForm({
       setValue("grantorFullName", client.name || "");
       setValue("grantorNationality", client.nationality || "");
       setValue("grantorCpf", client.cpf || "");
-      // O endereço do cliente é uma string única, preenchendo o campo de rua.
       setValue("grantorStreet", client.address || "");
     }
   }, [client, setValue]);

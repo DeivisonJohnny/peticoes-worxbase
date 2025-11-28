@@ -108,7 +108,6 @@ export default function AuxilioDoenca({ client, idForm }: AuxilioDoencaProps) {
       setValue("cpf", client.cpf || "");
       setValue("rg", client.rg || "");
       setValue("occupation", client.occupation || "");
-      // O endereço do cliente é uma string única, preenchendo o campo de rua.
       setValue("street", client.address || "");
     }
   }, [client, setValue]);
