@@ -15,6 +15,9 @@ import {
   Loader2,
   ChevronLeft,
   ChevronRight,
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown,
 } from "lucide-react";
 import { Divider } from "antd";
 import {
@@ -258,6 +261,11 @@ export type FilterType = {
   search: string;
 };
 
+export type SortType = {
+  field: "name" | "email" | null;
+  order: "asc" | "desc";
+};
+
 export default function Dashboard() {
   const [selectedClient, setSelectedClient] = useState<ClientType>();
   const [selectedDocument, setSelectedDocument] =
@@ -272,6 +280,10 @@ export default function Dashboard() {
     filterName: false,
     filterEmail: false,
     search: "",
+  });
+  const [sortConfig, setSortConfig] = useState<SortType>({
+    field: null,
+    order: "asc",
   });
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -303,6 +315,22 @@ export default function Dashboard() {
     setCurrentPage(1);
   };
 
+  const handleSort = (field: "name" | "email") => {
+    setSortConfig((prev) => {
+      if (prev.field === field) {
+        return {
+          field,
+          order: prev.order === "asc" ? "desc" : "asc",
+        };
+      }
+      return {
+        field,
+        order: "asc",
+      };
+    });
+    setCurrentPage(1);
+  };
+
   const handleNextPage = () => {
     if (currentPage < totalPages) {
       setCurrentPage((prev) => prev + 1);
@@ -321,6 +349,11 @@ export default function Dashboard() {
 
       if (filters.filterName) params.append("name", filters.search);
       if (filters.filterEmail) params.append("email", filters.search);
+
+      if (sortConfig.field) {
+        params.append("sortBy", sortConfig.field);
+        params.append("sortOrder", sortConfig.order);
+      }
 
       params.append("page", currentPage.toString());
       params.append("limit", itemsPerPage.toString());
@@ -347,7 +380,7 @@ export default function Dashboard() {
     } finally {
       setIsLoading(false);
     }
-  }, [filters.filterName, filters.filterEmail, filters.search, currentPage, itemsPerPage]);
+  }, [filters.filterName, filters.filterEmail, filters.search, currentPage, itemsPerPage, sortConfig]);
 
   const onDeleteCliente = async () => {
     setIsLoadingDelete(true);
@@ -607,6 +640,38 @@ export default function Dashboard() {
               </Button>
 
               <div className=" flex flex-col w-full gap-2 h-[300px] overflow-y-scroll scroll-list-clients  border-b-1 border-[#d6d6d6] pb-2 ">
+                <div className="flex items-center justify-between px-3 py-2 bg-gray-100 rounded-[8px] mb-1 sticky top-0 z-10">
+                  <button
+                    onClick={() => handleSort("name")}
+                    className="flex items-center gap-2 text-[14px] font-medium text-[#1C3552] hover:text-[#13529C] transition-colors cursor-pointer"
+                  >
+                    Nome
+                    {sortConfig.field === "name" ? (
+                      sortConfig.order === "asc" ? (
+                        <ArrowUp className="w-4 h-4" />
+                      ) : (
+                        <ArrowDown className="w-4 h-4" />
+                      )
+                    ) : (
+                      <ArrowUpDown className="w-4 h-4 opacity-40" />
+                    )}
+                  </button>
+                  <button
+                    onClick={() => handleSort("email")}
+                    className="flex items-center gap-2 text-[14px] font-medium text-[#1C3552] hover:text-[#13529C] transition-colors cursor-pointer"
+                  >
+                    Email
+                    {sortConfig.field === "email" ? (
+                      sortConfig.order === "asc" ? (
+                        <ArrowUp className="w-4 h-4" />
+                      ) : (
+                        <ArrowDown className="w-4 h-4" />
+                      )
+                    ) : (
+                      <ArrowUpDown className="w-4 h-4 opacity-40" />
+                    )}
+                  </button>
+                </div>
                 {clients.length > 0 &&
                   clients?.map((client, index) => (
                     <div
