@@ -1,11 +1,19 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Search, Filter, Eye, Pencil } from "lucide-react";
+import {
+  Search,
+  Filter,
+  Eye,
+  Pencil,
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown,
+} from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -42,7 +50,7 @@ import Api, { ApiErrorResponse } from "@/api";
 import { toast } from "sonner";
 
 import ClientDetailsModal from "@/components/ClientDetailsModal";
-import { FilterType } from "../dashboard";
+import { FilterType, SortType } from "../dashboard";
 import { Divider } from "antd";
 import ClientItemSkeleton from "@/components/ClientItemSkeleton";
 
@@ -55,6 +63,10 @@ export default function Clients() {
     filterName: false,
     filterEmail: false,
     search: "",
+  });
+  const [sortConfig, setSortConfig] = useState<SortType>({
+    field: null,
+    order: "asc",
   });
 
   const toggleClient = (id: string, checked: boolean) => {
@@ -102,6 +114,47 @@ export default function Clients() {
       search: filters.search,
     });
   };
+
+  const handleSort = (field: "name" | "email") => {
+    setSortConfig((prev) => {
+      if (prev.field === field) {
+        return {
+          field,
+          order: prev.order === "asc" ? "desc" : "asc",
+        };
+      }
+      return {
+        field,
+        order: "asc",
+      };
+    });
+  };
+
+  const sortedClients = useMemo(() => {
+    if (!sortConfig.field) return clients;
+
+    const sorted = [...clients].sort((a, b) => {
+      const aValue = a[sortConfig.field as keyof ClientType];
+      const bValue = b[sortConfig.field as keyof ClientType];
+
+      // Trata valores null ou undefined
+      if (!aValue && !bValue) return 0;
+      if (!aValue) return 1;
+      if (!bValue) return -1;
+
+      // Compara strings
+      const aString = String(aValue).toLowerCase();
+      const bString = String(bValue).toLowerCase();
+
+      if (sortConfig.order === "asc") {
+        return aString.localeCompare(bString);
+      } else {
+        return bString.localeCompare(aString);
+      }
+    });
+
+    return sorted;
+  }, [clients, sortConfig]);
 
   useEffect(() => {
     fetchData();
@@ -202,7 +255,39 @@ export default function Clients() {
             </div>
           ) : (
             <div className="space-y-1 flex flex-col gap-2">
-              {clients.map((client) => (
+              <div className="flex items-center justify-between px-3 py-2 bg-gray-100 rounded-[8px] mb-1 sticky top-0 z-10">
+                <button
+                  onClick={() => handleSort("name")}
+                  className="flex items-center gap-2 text-[14px] font-medium text-[#1C3552] hover:text-[#13529C] transition-colors cursor-pointer"
+                >
+                  Nome
+                  {sortConfig.field === "name" ? (
+                    sortConfig.order === "asc" ? (
+                      <ArrowUp className="w-4 h-4" />
+                    ) : (
+                      <ArrowDown className="w-4 h-4" />
+                    )
+                  ) : (
+                    <ArrowUpDown className="w-4 h-4 opacity-40" />
+                  )}
+                </button>
+                <button
+                  onClick={() => handleSort("email")}
+                  className="flex items-center gap-2 text-[14px] font-medium text-[#1C3552] hover:text-[#13529C] transition-colors cursor-pointer"
+                >
+                  Email
+                  {sortConfig.field === "email" ? (
+                    sortConfig.order === "asc" ? (
+                      <ArrowUp className="w-4 h-4" />
+                    ) : (
+                      <ArrowDown className="w-4 h-4" />
+                    )
+                  ) : (
+                    <ArrowUpDown className="w-4 h-4 opacity-40" />
+                  )}
+                </button>
+              </div>
+              {sortedClients.map((client) => (
                 <div
                   key={client.id}
                   className="flex items-center justify-between py-1 px-3 hover:bg-gray-50 cursor-pointer border-[#CCCCCC] border-1 rounded-[8px] shadow-[0px_2px_4px_#0000001A]"
