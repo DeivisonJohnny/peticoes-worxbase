@@ -192,12 +192,78 @@ export default function ProcuracaoInssForm({
 
   useEffect(() => {
     if (client) {
-      setValue("grantorName", client.name || "");
-      setValue("grantorNationality", client.nationality || "");
-      setValue("grantorMaritalStatus", client.maritalStatus || "");
-      setValue("grantorIdentity", client.rg || "");
-      setValue("grantorProfession", client.occupation || "");
-      setValue("grantorAddress", client.address || "");
+
+      if (client.documentSelected?.dataSnapshot) {
+        const snapshot = client.documentSelected.dataSnapshot;
+
+        // Grantor fields
+        if (snapshot.grantor) {
+          setValue("grantorName", snapshot.grantor.name || "");
+          setValue("grantorNationality", snapshot.grantor.nationality || "");
+          setValue("grantorMaritalStatus", snapshot.grantor.maritalStatus || "");
+          setValue("grantorIdentity", snapshot.grantor.identity || "");
+          setValue("grantorProfession", snapshot.grantor.profession || "");
+          setValue("grantorAddress", snapshot.grantor.address || "");
+          setValue("grantorNumber", snapshot.grantor.number || "");
+          setValue("grantorComplement", snapshot.grantor.complement || "");
+          setValue("grantorNeighborhood", snapshot.grantor.neighborhood || "");
+          setValue("grantorCity", snapshot.grantor.city || "");
+          setValue("grantorState", snapshot.grantor.state || "");
+          setValue("grantorZipCode", snapshot.grantor.zipCode || "");
+        }
+
+        // Grantee fields
+        if (snapshot.grantee) {
+          setValue("granteeName", snapshot.grantee.name || "");
+          setValue("granteeNationality", snapshot.grantee.nationality || "");
+          setValue("granteeMaritalStatus", snapshot.grantee.maritalStatus || "");
+          setValue("granteeIdentity", snapshot.grantee.identity || "");
+          setValue("granteeProfession", snapshot.grantee.profession || "");
+          setValue("granteeAddress", snapshot.grantee.address || "");
+          setValue("granteeNumber", snapshot.grantee.number || "");
+          setValue("granteeComplement", snapshot.grantee.complement || "");
+          setValue("granteeNeighborhood", snapshot.grantee.neighborhood || "");
+          setValue("granteeCity", snapshot.grantee.city || "");
+          setValue("granteeState", snapshot.grantee.state || "");
+          setValue("granteeZipCode", snapshot.grantee.zipCode || "");
+        }
+
+        // Powers fields
+        if (snapshot.powers) {
+          setValue("registerPasswordInternet", snapshot.powers.passwordRegistration);
+          setValue("proofOfLifeBanking", snapshot.powers.proofOfLife || false);
+          setValue("receivePaymentsInability", snapshot.powers.reasonInability || false);
+          setValue("receivePaymentsTravelWithinCountry", snapshot.powers.reasonDomesticTravel || false);
+          setValue("travelWithinCountryPeriod", snapshot.powers.domesticTravelPeriod || "");
+          setValue("receivePaymentsTravelAbroad", snapshot.powers.reasonInternationalTravel || false);
+          setValue("travelAbroadPeriod", snapshot.powers.internationalTravelPeriod || "");
+          setValue("receivePaymentsResidenceAbroad", snapshot.powers.reasonLivingAbroad || false);
+          setValue("residenceAbroadCountry", snapshot.powers.countryOfResidence || "");
+          setValue("requestBenefits", snapshot.powers.requestBenefits || false);
+          setValue("otherRequest", snapshot.powers.otherRequest || false);
+          setValue("otherRequestDescription", snapshot.powers.otherRequestDescription || "");
+        }
+
+        // Document fields
+        if (snapshot.document) {
+          setValue("location", snapshot.document.location || "");
+          if (snapshot.document.documentDate) {
+            const date = new Date(snapshot.document.documentDate);
+            setValue("date", date.toISOString().split('T')[0]);
+          }
+        }
+      } else {
+
+        
+        setValue("grantorName", client.name || "");
+        setValue("grantorNationality", client.nationality || "");
+        setValue("grantorMaritalStatus", client.maritalStatus || "");
+        setValue("grantorIdentity", client.rg || "");
+        setValue("grantorProfession", client.occupation || "");
+
+        
+        setValue("grantorAddress", client.address || "");
+      }
     }
   }, [client, setValue]);
 

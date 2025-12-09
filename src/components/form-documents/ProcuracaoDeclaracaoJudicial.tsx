@@ -68,10 +68,52 @@ export default function ProcuracaoDeclaracaoJudicial({
 
   useEffect(() => {
     if (client) {
-      setValue("grantorFullName", client.name || "");
-      setValue("grantorNationality", client.nationality || "");
-      setValue("grantorCpf", client.cpf || "");
-      setValue("grantorStreet", client.address || "");
+ 
+      
+      if (client.documentSelected?.dataSnapshot) {
+        const snapshot = client.documentSelected.dataSnapshot;
+
+        if (snapshot.client) {
+          setValue("grantorFullName", snapshot.client.name || "");
+          setValue("grantorNationality", snapshot.client.nationality || "");
+          setValue("grantorCpf", snapshot.client.cpf || "");
+
+          const address = snapshot.client.address || "";
+          const addressParts = address.split(",").map(part => part.trim());
+
+          if (addressParts.length >= 1) {
+            setValue("grantorStreet", addressParts[0] || "");
+          }
+          if (addressParts.length >= 2) {
+            setValue("grantorStreetNumber", addressParts[1] || "");
+          }
+          if (addressParts.length >= 3) {
+            setValue("grantorNeighborhood", addressParts[2] || "");
+          }
+          if (addressParts.length >= 4) {
+            setValue("grantorCity", addressParts[3] || "");
+          }
+          if (addressParts.length >= 5) {
+            setValue("grantorState", addressParts[4] || "");
+          }
+        }
+
+        // Fill document data from snapshot
+        if (snapshot.document) {
+          setValue("documentLocation", snapshot.document.location || "");
+
+          if (snapshot.document.documentDate) {
+            const date = new Date(snapshot.document.documentDate);
+            setValue("documentDate", date.toISOString().split('T')[0]);
+          }
+        }
+      } else {
+       
+        setValue("grantorFullName", client.name || "");
+        setValue("grantorNationality", client.nationality || "");
+        setValue("grantorCpf", client.cpf || "");
+        setValue("grantorStreet", client.address || "");
+      }
     }
 
     if (documents && idForm) {

@@ -114,7 +114,105 @@ export type ClientType = {
   createdAt: string | Date;
   updatedAt: string | Date;
   documents: Documento[];
+  lastDocuments?: LastDocuments[]
+  documentSelected?: {
+    dataSnapshot: {
+      client?: {
+        id?: string;
+        name?: string;
+        email?: string;
+        cpf?: string;
+        cnpj?: string;
+        rg?: string;
+        phone?: string;
+        address?: string;
+        nationality?: string;
+        maritalStatus?: string;
+        dateOfBirth?: string;
+        birthPlace?: string;
+        motherName?: string;
+        occupation?: string;
+        nickname?: string;
+        rgIssuer?: string;
+        isActive?: boolean;
+        createdAt?: string;
+        updatedAt?: string;
+        [key: string]: unknown;
+      };
+      contract?: {
+        administrativePercentage?: string;
+        administrativeSalaries?: string;
+        administrativeInstallments?: string;
+        judicialPercentage?: string;
+        judicialInstallments?: string;
+        [key: string]: unknown;
+      };
+      document?: {
+        location?: string;
+        documentDate?: string;
+        documentLocation?: string;
+        day?: string;
+        month?: string;
+        year?: string;
+        [key: string]: unknown;
+      };
+      grantor?: {
+        name?: string;
+        nationality?: string;
+        maritalStatus?: string;
+        identity?: string;
+        profession?: string;
+        address?: string;
+        number?: string;
+        complement?: string;
+        neighborhood?: string;
+        city?: string;
+        state?: string;
+        zipCode?: string;
+        [key: string]: unknown;
+      };
+      grantee?: {
+        name?: string;
+        nationality?: string;
+        maritalStatus?: string;
+        identity?: string;
+        profession?: string;
+        address?: string;
+        number?: string;
+        complement?: string;
+        neighborhood?: string;
+        city?: string;
+        state?: string;
+        zipCode?: string;
+        [key: string]: unknown;
+      };
+      powers?: {
+        passwordRegistration?: boolean;
+        proofOfLife?: boolean;
+        reasonInability?: boolean;
+        reasonDomesticTravel?: boolean;
+        domesticTravelPeriod?: string;
+        reasonInternationalTravel?: boolean;
+        internationalTravelPeriod?: string;
+        reasonLivingAbroad?: boolean;
+        countryOfResidence?: string;
+        requestBenefits?: boolean;
+        otherRequest?: boolean;
+        otherRequestDescription?: string;
+        [key: string]: unknown;
+      };
+      [key: string]: unknown;
+    };
+    [key: string]: unknown;
+  };
 };
+
+type LastDocuments = {
+  id: string
+  title: string
+  dataSnapshot:  Record<string, unknown>, 
+}
+
 
 export type Documento = {
   templateId: string;

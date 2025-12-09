@@ -49,7 +49,7 @@ const listForms: listFormsProps[] = [
     icon: CircleCheckBig,
     form: (client, idForm, documents) => (
       <ContratoHonorarios
-        client={client}
+        client={client ? {...client, documentSelected: client?.lastDocuments?.find((item) => Util.compararStrings(item.title, 'Contrato de Honorários') )} : null}
         idForm={idForm}
         documents={documents}
       />
@@ -71,7 +71,7 @@ const listForms: listFormsProps[] = [
     icon: CircleCheckBig,
     form: (client, idForm, documents) => (
       <ProcuracaoDeclaracaoJudicial
-        client={client}
+client={client ? {...client, documentSelected: client?.lastDocuments?.find((item) => Util.compararStrings(item.title, 'Procuração e Declaração Judicial') )} : null}
         idForm={idForm}
         documents={documents}
       />
@@ -92,7 +92,9 @@ const listForms: listFormsProps[] = [
     completed: "preenchido",
     icon: CircleCheckBig,
     form: (client, idForm, documents) => (
-      <ProcuracaoPPP client={client} idForm={idForm} documents={documents} />
+      <ProcuracaoPPP 
+      client={client ? {...client, documentSelected: client?.lastDocuments?.find((item) => Util.compararStrings(item.title, 'Procuração Pessoa Física') )} : null}
+      idForm={idForm} documents={documents} />
     ),
     propsIcon: {
       color: "#F5F5F5",
@@ -165,8 +167,7 @@ const listForms: listFormsProps[] = [
     icon: CircleCheckBig,
     form: (client, idForm, documents) => (
       <ProcuracaoInssForm
-        client={client}
-        idForm={idForm}
+ client={client ? {...client, documentSelected: client?.lastDocuments?.find((item) => Util.compararStrings(item.title, 'Procuração INSS') )} : null}        idForm={idForm}
         documents={documents}
       />
     ),

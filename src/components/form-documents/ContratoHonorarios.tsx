@@ -89,14 +89,42 @@ export default function ContratoHonorarios({
       setValue("clientNationality", client.nationality || "");
       setValue("clientCpf", client.cpf || "");
 
-      // O endereço está vindo como uma string única, ajustado para o campo de rua.
-      // Você pode querer dividir o endereço em seus respectivos campos.
-      setValue("clientStreet", client.address || "");
-      // setValue("clientStreetNumber", client.addressNumber || "");
-      // setValue("clientNeighborhood", client.neighborhood || "");
-      // setValue("clientCity", client.city || "");
-      // setValue("clientState", client.state || "");
-      // setValue("clientZipCode", client.zipCode || "");
+      if(client.documentSelected?.dataSnapshot) {
+        const snapshot = client.documentSelected.dataSnapshot;
+
+        if (snapshot.client?.address) {
+        
+          const addressParts = snapshot.client.address.split(", ");
+          const street = addressParts[0] || "";
+          const number = addressParts[1] || "";
+          const neighborhood = addressParts[2] || "";
+          const city = addressParts[3] || "";
+          const state = addressParts[4] || "";
+
+          setValue("clientStreet", street);
+          setValue("clientStreetNumber", number);
+          setValue("clientNeighborhood", neighborhood);
+          setValue("clientCity", city);
+          setValue("clientState", state);
+        }
+
+        if (snapshot.contract) {
+          setValue("administrativeSuccessPercentage", snapshot.contract.administrativePercentage || "");
+          setValue("administrativeBenefitSalaries", snapshot.contract.administrativeSalaries || "");
+          setValue("administrativeInstallments", snapshot.contract.administrativeInstallments || "");
+          setValue("judicialSuccessPercentage", snapshot.contract.judicialPercentage || "");
+          setValue("judicialFutureInstallments", snapshot.contract.judicialInstallments || "");
+        }
+
+        if (snapshot.document) {
+          setValue("documentLocation", snapshot.document.location || "");
+          if (snapshot.document.documentDate) {
+            const date = new Date(snapshot.document.documentDate);
+            const formattedDate = date.toISOString().split('T')[0];
+            setValue("documentDate", formattedDate);
+          }
+        }
+      }
     }
   }, [client, setValue]);
 

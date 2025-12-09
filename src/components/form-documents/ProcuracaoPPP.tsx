@@ -67,10 +67,43 @@ export default function PppPowerOfAttorneyForm({
 
   useEffect(() => {
     if (client) {
-      setValue("grantorFullName", client.name || "");
-      setValue("grantorNationality", client.nationality || "");
-      setValue("grantorCpf", client.cpf || "");
-      setValue("grantorStreet", client.address || "");
+      // Check if there's a documentSelected with dataSnapshot
+      if (client.documentSelected?.dataSnapshot) {
+        const snapshot = client.documentSelected.dataSnapshot;
+
+        // Fill client data from snapshot
+        if (snapshot.client) {
+          setValue("grantorFullName", snapshot.client.name || "");
+          setValue("grantorNationality", snapshot.client.nationality || "");
+          setValue("grantorCpf", snapshot.client.cpf || "");
+
+          // Parse address if it's a complete string
+          const address = snapshot.client.address || "";
+          const addressParts = address.split(",").map(part => part.trim());
+
+          if (addressParts.length >= 1) {
+            setValue("grantorStreet", addressParts[0] || "");
+          }
+          if (addressParts.length >= 2) {
+            setValue("grantorStreetNumber", addressParts[1] || "");
+          }
+          if (addressParts.length >= 3) {
+            setValue("grantorNeighborhood", addressParts[2] || "");
+          }
+          if (addressParts.length >= 4) {
+            setValue("grantorCity", addressParts[3] || "");
+          }
+          if (addressParts.length >= 5) {
+            setValue("grantorState", addressParts[4] || "");
+          }
+        }
+      } else {
+        // Fallback to basic client data if no documentSelected
+        setValue("grantorFullName", client.name || "");
+        setValue("grantorNationality", client.nationality || "");
+        setValue("grantorCpf", client.cpf || "");
+        setValue("grantorStreet", client.address || "");
+      }
     }
   }, [client, setValue]);
 
