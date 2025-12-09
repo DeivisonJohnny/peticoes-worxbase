@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
@@ -328,8 +328,33 @@ export default function Dashboard() {
         order: "asc",
       };
     });
-    setCurrentPage(1);
   };
+
+  const sortedClients = useMemo(() => {
+    if (!sortConfig.field) return clients;
+
+    const sorted = [...clients].sort((a, b) => {
+      const aValue = a[sortConfig.field as keyof ClientType];
+      const bValue = b[sortConfig.field as keyof ClientType];
+
+      // Trata valores null ou undefined
+      if (!aValue && !bValue) return 0;
+      if (!aValue) return 1;
+      if (!bValue) return -1;
+
+      // Compara strings
+      const aString = String(aValue).toLowerCase();
+      const bString = String(bValue).toLowerCase();
+
+      if (sortConfig.order === "asc") {
+        return aString.localeCompare(bString);
+      } else {
+        return bString.localeCompare(aString);
+      }
+    });
+
+    return sorted;
+  }, [clients, sortConfig]);
 
   const handleNextPage = () => {
     if (currentPage < totalPages) {
@@ -349,11 +374,6 @@ export default function Dashboard() {
 
       if (filters.filterName) params.append("name", filters.search);
       if (filters.filterEmail) params.append("email", filters.search);
-
-      if (sortConfig.field) {
-        params.append("sortBy", sortConfig.field);
-        params.append("sortOrder", sortConfig.order);
-      }
 
       params.append("page", currentPage.toString());
       params.append("limit", itemsPerPage.toString());
@@ -380,7 +400,7 @@ export default function Dashboard() {
     } finally {
       setIsLoading(false);
     }
-  }, [filters.filterName, filters.filterEmail, filters.search, currentPage, itemsPerPage, sortConfig]);
+  }, [filters.filterName, filters.filterEmail, filters.search, currentPage, itemsPerPage]);
 
   const onDeleteCliente = async () => {
     setIsLoadingDelete(true);
@@ -672,8 +692,8 @@ export default function Dashboard() {
                     )}
                   </button>
                 </div>
-                {clients.length > 0 &&
-                  clients?.map((client, index) => (
+                {sortedClients.length > 0 &&
+                  sortedClients?.map((client, index) => (
                     <div
                       key={index}
                       className={` flex items-center justify-between py-2 px-3 hover:bg-gray-50  cursor-pointer bg-white  border-1 rounded-[8px] shadow-[0px_2px_4px_#0000001A] min-h-[42px]  ${
