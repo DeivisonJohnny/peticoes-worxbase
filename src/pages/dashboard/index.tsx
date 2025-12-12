@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback, useMemo } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
@@ -102,6 +102,7 @@ export type ClientType = {
   cpf?: string | null;
   cnpj?: string | null;
   address?: string | null;
+  cep?: string | null;
   phone?: string | null;
   dateOfBirth?: string | Date | null;
   rg?: string | null;
@@ -261,8 +262,15 @@ export type FilterType = {
   search: string;
 };
 
+export type ClientFilterType = {
+  filterName: boolean;
+  filterPhone: boolean;
+  filterCpfCnpj: boolean;
+  search: string;
+};
+
 export type SortType = {
-  field: "name" | "email" | null;
+  field: "name" | "createdAt" | null;
   order: "asc" | "desc";
 };
 
@@ -276,14 +284,15 @@ export default function Dashboard() {
   const [clients, setClients] = useState<ClientType[]>([]);
   const [showPopup, setShowPopup] = useState(false);
   const { generatedDocument } = useGenerateDocument();
-  const [filters, setFilters] = useState<FilterType>({
+  const [filters, setFilters] = useState<ClientFilterType>({
     filterName: false,
-    filterEmail: false,
+    filterPhone: false,
+    filterCpfCnpj: false,
     search: "",
   });
   const [sortConfig, setSortConfig] = useState<SortType>({
-    field: null,
-    order: "asc",
+    field: "createdAt",
+    order: "desc",
   });
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -315,7 +324,84 @@ export default function Dashboard() {
     setCurrentPage(1);
   };
 
-  const handleSort = (field: "name" | "email") => {
+
+  const formatCPF = (value: string) => {
+    return value
+      .replace(/\D/g, "")
+      .replace(/(\d{3})(\d)/, "$1.$2")
+      .replace(/(\d{3})(\d)/, "$1.$2")
+      .replace(/(\d{3})(\d{1,2})/, "$1-$2")
+      .replace(/(-\d{2})\d+?$/, "$1");
+  };
+
+
+  const formatCNPJ = (value: string) => {
+    return value
+      .replace(/\D/g, "")
+      .replace(/(\d{2})(\d)/, "$1.$2")
+      .replace(/(\d{3})(\d)/, "$1.$2")
+      .replace(/(\d{3})(\d)/, "$1/$2")
+      .replace(/(\d{4})(\d)/, "$1-$2")
+      .replace(/(-\d{2})\d+?$/, "$1");
+  };
+
+
+  const formatPhone = (value: string) => {
+    const cleaned = value.replace(/\D/g, "");
+    if (cleaned.length <= 10) {
+      return cleaned
+        .replace(/(\d{2})(\d)/, "($1) $2")
+        .replace(/(\d{4})(\d)/, "$1-$2")
+        .replace(/(-\d{4})\d+?$/, "$1");
+    }
+    return cleaned
+      .replace(/(\d{2})(\d)/, "($1) $2")
+      .replace(/(\d{5})(\d)/, "$1-$2")
+      .replace(/(-\d{4})\d+?$/, "$1");
+  };
+
+
+  const handleSearchInput = (value: string) => {
+    const cleaned = value.replace(/\D/g, "");
+
+
+    if (cleaned.length === 0) {
+      setFilters((prev) => ({ ...prev, search: value }));
+      return;
+    }
+
+    let formatted = value;
+
+
+    if (cleaned.length <= 11) {
+
+      if (cleaned.length === 11) {
+
+        const ddd = parseInt(cleaned.substring(0, 2));
+        if (ddd >= 11 && ddd <= 99) {
+          formatted = formatPhone(value);
+        } else {
+          formatted = formatCPF(value);
+        }
+      } else if (cleaned.length === 10) {
+        formatted = formatPhone(value);
+      } else if (cleaned.length < 10) {
+
+        if (value.includes("(") || value.includes(")")) {
+          formatted = formatPhone(value);
+        } else {
+          formatted = value;
+        }
+      }
+    } else if (cleaned.length <= 14) {
+
+      formatted = formatCNPJ(value);
+    }
+
+    setFilters((prev) => ({ ...prev, search: formatted }));
+  };
+
+  const handleSort = (field: "name" | "createdAt") => {
     setSortConfig((prev) => {
       if (prev.field === field) {
         return {
@@ -325,36 +411,10 @@ export default function Dashboard() {
       }
       return {
         field,
-        order: "asc",
+        order: field === "createdAt" ? "desc" : "asc",
       };
     });
   };
-
-  const sortedClients = useMemo(() => {
-    if (!sortConfig.field) return clients;
-
-    const sorted = [...clients].sort((a, b) => {
-      const aValue = a[sortConfig.field as keyof ClientType];
-      const bValue = b[sortConfig.field as keyof ClientType];
-
-      // Trata valores null ou undefined
-      if (!aValue && !bValue) return 0;
-      if (!aValue) return 1;
-      if (!bValue) return -1;
-
-      // Compara strings
-      const aString = String(aValue).toLowerCase();
-      const bString = String(bValue).toLowerCase();
-
-      if (sortConfig.order === "asc") {
-        return aString.localeCompare(bString);
-      } else {
-        return bString.localeCompare(aString);
-      }
-    });
-
-    return sorted;
-  }, [clients, sortConfig]);
 
   const handleNextPage = () => {
     if (currentPage < totalPages) {
@@ -373,10 +433,16 @@ export default function Dashboard() {
       const params = new URLSearchParams();
 
       if (filters.filterName) params.append("name", filters.search);
-      if (filters.filterEmail) params.append("email", filters.search);
+      if (filters.filterPhone) params.append("phone", filters.search);
+      if (filters.filterCpfCnpj) params.append("cpfCnpj", filters.search);
 
       params.append("page", currentPage.toString());
       params.append("limit", itemsPerPage.toString());
+
+      if (sortConfig.field) {
+        params.append("sortBy", sortConfig.field);
+        params.append("order", sortConfig.order);
+      }
 
       const query = params.toString() ? `?${params.toString()}` : "";
 
@@ -400,7 +466,7 @@ export default function Dashboard() {
     } finally {
       setIsLoading(false);
     }
-  }, [filters.filterName, filters.filterEmail, filters.search, currentPage, itemsPerPage]);
+  }, [filters.filterName, filters.filterPhone, filters.filterCpfCnpj, filters.search, currentPage, itemsPerPage, sortConfig.field, sortConfig.order]);
 
   const onDeleteCliente = async () => {
     setIsLoadingDelete(true);
@@ -467,8 +533,12 @@ export default function Dashboard() {
   }, [selectedClient?.id]);
 
   useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+    const delayDebounce = setTimeout(() => {
+      fetchData();
+    }, 500);
+
+    return () => clearTimeout(delayDebounce);
+  }, [filters.search, filters.filterName, filters.filterPhone, filters.filterCpfCnpj, currentPage, itemsPerPage, fetchData]);
 
   useEffect(() => {
     fetchDocuments();
@@ -592,11 +662,13 @@ export default function Dashboard() {
                   placeholder="Pesquisar cliente..."
                   className="pl-[15px] text-sm rounded-[50px] "
                   value={filters.search}
-                  onChange={(e) =>
-                    setFilters((prev) => ({ ...prev, search: e.target.value }))
-                  }
+                  onChange={(e) => handleSearchInput(e.target.value)}
                 />
-                <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-black w-4 h-4" />
+                {isLoading ? (
+                  <Loader2 className="absolute right-3 top-1/2 transform -translate-y-1/2 text-black w-4 h-4 animate-spin" />
+                ) : (
+                  <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-black w-4 h-4" />
+                )}
               </div>
 
               <DropdownMenu>
@@ -637,15 +709,32 @@ export default function Dashboard() {
                     className=" text-[#1C3552] text-[14px] cursor-pointer"
                   >
                     <Checkbox
-                      id={"filterEmail"}
-                      checked={filters.filterEmail}
+                      id={"filterPhone"}
+                      checked={filters.filterPhone}
                       onCheckedChange={(checked) =>
-                        toggleFilter("filterEmail", checked as boolean)
+                        toggleFilter("filterPhone", checked as boolean)
                       }
                       className="w-4 h-4 border-[#A7A7A7]"
                     />
-                    <label htmlFor="filterEmail" className="cursor-pointer">
-                      Email
+                    <label htmlFor="filterPhone" className="cursor-pointer">
+                      Telefone
+                    </label>
+                  </DropdownMenuItem>
+                  <Divider className="p-0 m-0" style={{ margin: 0 }} />
+                  <DropdownMenuItem
+                    onSelect={(e) => e.preventDefault()}
+                    className=" text-[#1C3552] text-[14px] cursor-pointer"
+                  >
+                    <Checkbox
+                      id={"filterCpfCnpj"}
+                      checked={filters.filterCpfCnpj}
+                      onCheckedChange={(checked) =>
+                        toggleFilter("filterCpfCnpj", checked as boolean)
+                      }
+                      className="w-4 h-4 border-[#A7A7A7]"
+                    />
+                    <label htmlFor="filterCpfCnpj" className="cursor-pointer">
+                      CPF/CNPJ
                     </label>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
@@ -654,7 +743,7 @@ export default function Dashboard() {
             <div className="space-y-1 flex  flex-col gap-2">
               <Button
                 className="text-[16px] text-[#529FF6] w-full border-2 border-[#529FF6] mb-2 rounded-[8px] bg-transparent flex items-center justify-center hover:bg-blue-700  hover:text-white hover:border-blue-600 cursor-pointer "
-                onClick={() => router.push("/register-client")}
+                onClick={() => router.push("/clients/new")}
               >
                 Adicionar novo cliente <Plus width={25} height={25} />
               </Button>
@@ -677,11 +766,11 @@ export default function Dashboard() {
                     )}
                   </button>
                   <button
-                    onClick={() => handleSort("email")}
+                    onClick={() => handleSort("createdAt")}
                     className="flex items-center gap-2 text-[14px] font-medium text-[#1C3552] hover:text-[#13529C] transition-colors cursor-pointer"
                   >
-                    Email
-                    {sortConfig.field === "email" ? (
+                    Data de criação
+                    {sortConfig.field === "createdAt" ? (
                       sortConfig.order === "asc" ? (
                         <ArrowUp className="w-4 h-4" />
                       ) : (
@@ -692,8 +781,8 @@ export default function Dashboard() {
                     )}
                   </button>
                 </div>
-                {sortedClients.length > 0 &&
-                  sortedClients?.map((client, index) => (
+                {clients.length > 0 &&
+                  clients?.map((client, index) => (
                     <div
                       key={index}
                       className={` flex items-center justify-between py-2 px-3 hover:bg-gray-50  cursor-pointer bg-white  border-1 rounded-[8px] shadow-[0px_2px_4px_#0000001A] min-h-[42px]  ${
@@ -714,7 +803,7 @@ export default function Dashboard() {
                             router.push(`/documents/${client.id}`)
                           }
                         >
-                          Gerar documento
+                          Ir para formulário
                           <ArrowRight width={12} />
                         </span>
                         <DropdownMenu
@@ -843,10 +932,10 @@ export default function Dashboard() {
                 </div>
                 <div className="  flex flex-row flex-nowrap items-center gap-[5px] ">
                   <label className="text-[16px]  font-medium text-gray-500">
-                    E-mail:
+                    Telefone:
                   </label>
                   <div className="text-[16px] font-normal text-gray-700">
-                    {selectedClient?.email ?? "XXXXXXXXXXXXX"}
+                    {selectedClient?.phone ?? "XXXXXXXXXXXXX"}
                   </div>
                 </div>
                 <div className="  flex flex-row flex-nowrap items-center gap-[5px] ">
@@ -855,14 +944,6 @@ export default function Dashboard() {
                   </label>
                   <div className="text-[16px] font-normal text-gray-700">
                     {selectedClient?.address ?? "XXXXXXXXXXXXX"}
-                  </div>
-                </div>
-                <div className="  flex flex-row flex-nowrap items-center gap-[5px] ">
-                  <label className="text-[16px]  font-medium text-gray-500">
-                    Telefone:
-                  </label>
-                  <div className="text-[16px] font-normal text-gray-700">
-                    {selectedClient?.phone ?? "XXXXXXXXXXXXX"}
                   </div>
                 </div>
               </div>

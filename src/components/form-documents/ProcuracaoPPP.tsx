@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import Util from "@/utils/Util";
 import { Divider } from "antd";
-import { ClientType, Documento } from "@/pages/dashboard";
+import { ClientType } from "@/pages/dashboard";
 import { useEffect, useState } from "react";
 import Api, { ApiErrorResponse } from "@/api";
 import { toast } from "sonner";
@@ -43,7 +43,6 @@ type PppPowerOfAttorneyResolver = Resolver<PppPowerOfAttorneyFormData>;
 interface PppPowerOfAttorneyFormProps {
   client?: ClientType | null;
   idForm?: string;
-  documents?: Documento[];
 }
 
 export default function PppPowerOfAttorneyForm({
@@ -66,43 +65,31 @@ export default function PppPowerOfAttorneyForm({
   });
 
   useEffect(() => {
-    if (client) {
-      // Check if there's a documentSelected with dataSnapshot
-      if (client.documentSelected?.dataSnapshot) {
-        const snapshot = client.documentSelected.dataSnapshot;
+    if (client && "id" in client) {
+      setValue("grantorFullName", client.name || "");
+      setValue("grantorNationality", client.nationality || "");
+      setValue("grantorCpf", client.cpf || "");
 
-        // Fill client data from snapshot
-        if (snapshot.client) {
-          setValue("grantorFullName", snapshot.client.name || "");
-          setValue("grantorNationality", snapshot.client.nationality || "");
-          setValue("grantorCpf", snapshot.client.cpf || "");
+      if (client.address) {
+        const addressParts = client.address.split(", ");
+        const street = addressParts[0] || "";
+        const number = addressParts[1] || "";
+        const neighborhood = addressParts[2] || "";
 
-          // Parse address if it's a complete string
-          const address = snapshot.client.address || "";
-          const addressParts = address.split(",").map(part => part.trim());
+        const cityStatePart = addressParts[3] || "";
+        const cityStateParts = cityStatePart.split(" - ");
+        const city = cityStateParts[0]?.trim() || "";
+        const state = cityStateParts[1]?.trim() || "";
 
-          if (addressParts.length >= 1) {
-            setValue("grantorStreet", addressParts[0] || "");
-          }
-          if (addressParts.length >= 2) {
-            setValue("grantorStreetNumber", addressParts[1] || "");
-          }
-          if (addressParts.length >= 3) {
-            setValue("grantorNeighborhood", addressParts[2] || "");
-          }
-          if (addressParts.length >= 4) {
-            setValue("grantorCity", addressParts[3] || "");
-          }
-          if (addressParts.length >= 5) {
-            setValue("grantorState", addressParts[4] || "");
-          }
-        }
-      } else {
-        // Fallback to basic client data if no documentSelected
-        setValue("grantorFullName", client.name || "");
-        setValue("grantorNationality", client.nationality || "");
-        setValue("grantorCpf", client.cpf || "");
-        setValue("grantorStreet", client.address || "");
+        setValue("grantorStreet", street);
+        setValue("grantorStreetNumber", number);
+        setValue("grantorNeighborhood", neighborhood);
+        setValue("grantorCity", city);
+        setValue("grantorState", state);
+      }
+
+      if (client.cep) {
+        setValue("grantorZipCode", client.cep);
       }
     }
   }, [client, setValue]);

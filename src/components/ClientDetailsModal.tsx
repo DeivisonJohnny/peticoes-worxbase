@@ -76,12 +76,6 @@ export default function ClientDetailsModal({
               </span>
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
-              <span className="text-sm font-medium col-span-1">E-mail:</span>
-              <span className="text-sm col-span-3">
-                {clientDetails.email || "N/A"}
-              </span>
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
               <span className="text-sm font-medium col-span-1">Telefone:</span>
               <span className="text-sm col-span-3">
                 {clientDetails.phone || "N/A"}

@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "../ui/checkbox";
 import Util from "@/utils/Util";
 import { useEffect, useState } from "react";
-import { ClientType, Documento } from "@/pages/dashboard";
+import { ClientType } from "@/pages/dashboard";
 import Api, { ApiErrorResponse } from "@/api";
 import { toast } from "sonner";
 import { useGenerateDocument } from "@/contexts/GenerateContext";
@@ -84,7 +84,6 @@ type TermoRepresentacaoResolver = Resolver<TermoRepresentacaoFormData>;
 interface TermoRepresentacaoFormProps {
   client?: ClientType | null;
   idForm?: string;
-  documents?: Documento[];
 }
 
 export default function TermoRepresentacaoForm({
@@ -137,11 +136,34 @@ export default function TermoRepresentacaoForm({
   });
 
   useEffect(() => {
-    if (client) {
+    if (client && "id" in client) {
       setValue("representedName", client.name || "");
       setValue("representedCpf", client.cpf || "");
       setValue("representedRg", client.rg || "");
-      setValue("representedAddress", client.address || "");
+
+      if (client.address) {
+        const addressParts = client.address.split(", ");
+        const street = addressParts[0] || "";
+        const number = addressParts[1] || "";
+        const neighborhood = addressParts[2] || "";
+
+        const cityStatePart = addressParts[3] || "";
+        const cityStateParts = cityStatePart.split(" - ");
+        const city = cityStateParts[0]?.trim() || "";
+        const state = cityStateParts[1]?.trim() || "";
+
+        // Combina rua, número e bairro para o campo de endereço
+        const fullAddress = [street, number, neighborhood].filter(Boolean).join(", ");
+        setValue("representedAddress", fullAddress);
+
+        // Combina cidade e estado para o campo de município
+        const cityWithState = [city, state].filter(Boolean).join(" - ");
+        setValue("representedCity", cityWithState);
+      }
+
+      if (client.cep) {
+        setValue("representedCep", client.cep);
+      }
     }
   }, [client, setValue]);
 

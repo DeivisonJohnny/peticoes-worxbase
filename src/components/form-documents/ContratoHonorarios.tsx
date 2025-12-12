@@ -89,24 +89,30 @@ export default function ContratoHonorarios({
       setValue("clientNationality", client.nationality || "");
       setValue("clientCpf", client.cpf || "");
 
+      if (client.address) {
+        const addressParts = client.address.split(", ");
+        const street = addressParts[0] || "";
+        const number = addressParts[1] || "";
+        const neighborhood = addressParts[2] || "";
+
+        const cityStatePart = addressParts[3] || "";
+        const cityStateParts = cityStatePart.split(" - ");
+        const city = cityStateParts[0]?.trim() || "";
+        const state = cityStateParts[1]?.trim() || "";
+
+        setValue("clientStreet", street);
+        setValue("clientStreetNumber", number);
+        setValue("clientNeighborhood", neighborhood);
+        setValue("clientCity", city);
+        setValue("clientState", state);
+      }
+
+      if (client.cep) {
+        setValue("clientZipCode", client.cep);
+      }
+
       if(client.documentSelected?.dataSnapshot) {
         const snapshot = client.documentSelected.dataSnapshot;
-
-        if (snapshot.client?.address) {
-        
-          const addressParts = snapshot.client.address.split(", ");
-          const street = addressParts[0] || "";
-          const number = addressParts[1] || "";
-          const neighborhood = addressParts[2] || "";
-          const city = addressParts[3] || "";
-          const state = addressParts[4] || "";
-
-          setValue("clientStreet", street);
-          setValue("clientStreetNumber", number);
-          setValue("clientNeighborhood", neighborhood);
-          setValue("clientCity", city);
-          setValue("clientState", state);
-        }
 
         if (snapshot.contract) {
           setValue("administrativeSuccessPercentage", snapshot.contract.administrativePercentage || "");

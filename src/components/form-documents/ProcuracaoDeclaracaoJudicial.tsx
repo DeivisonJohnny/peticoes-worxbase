@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import Util from "@/utils/Util";
 import { Divider } from "antd";
-import { ClientType, Documento } from "@/pages/dashboard/index";
+import { ClientType } from "@/pages/dashboard/index";
 import { useEffect, useState } from "react";
 import Api, { ApiErrorResponse } from "@/api";
 import { toast } from "sonner";
@@ -45,13 +45,11 @@ type AdJudiciaResolver = Resolver<AdJudiciaFormData>;
 interface ProcuracaoDeclaracaoJudicialProps {
   client?: ClientType | null;
   idForm?: string;
-  documents?: Documento[];
 }
 
 export default function ProcuracaoDeclaracaoJudicial({
   client,
   idForm,
-  documents,
 }: ProcuracaoDeclaracaoJudicialProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const {
@@ -67,68 +65,47 @@ export default function ProcuracaoDeclaracaoJudicial({
   const { generatedDocument } = useGenerateDocument();
 
   useEffect(() => {
-    if (client) {
- 
-      
-      if (client.documentSelected?.dataSnapshot) {
+    if (client && "id" in client) {
+      setValue("grantorFullName", client.name || "");
+      setValue("grantorNationality", client.nationality || "");
+      setValue("grantorCpf", client.cpf || "");
+
+      if (client.address) {
+        const addressParts = client.address.split(", ");
+        const street = addressParts[0] || "";
+        const number = addressParts[1] || "";
+        const neighborhood = addressParts[2] || "";
+
+        const cityStatePart = addressParts[3] || "";
+        const cityStateParts = cityStatePart.split(" - ");
+        const city = cityStateParts[0]?.trim() || "";
+        const state = cityStateParts[1]?.trim() || "";
+
+        setValue("grantorStreet", street);
+        setValue("grantorStreetNumber", number);
+        setValue("grantorNeighborhood", neighborhood);
+        setValue("grantorCity", city);
+        setValue("grantorState", state);
+      }
+
+      if (client.cep) {
+        setValue("grantorZipCode", client.cep);
+      }
+
+      if(client.documentSelected?.dataSnapshot) {
         const snapshot = client.documentSelected.dataSnapshot;
 
-        if (snapshot.client) {
-          setValue("grantorFullName", snapshot.client.name || "");
-          setValue("grantorNationality", snapshot.client.nationality || "");
-          setValue("grantorCpf", snapshot.client.cpf || "");
-
-          const address = snapshot.client.address || "";
-          const addressParts = address.split(",").map(part => part.trim());
-
-          if (addressParts.length >= 1) {
-            setValue("grantorStreet", addressParts[0] || "");
-          }
-          if (addressParts.length >= 2) {
-            setValue("grantorStreetNumber", addressParts[1] || "");
-          }
-          if (addressParts.length >= 3) {
-            setValue("grantorNeighborhood", addressParts[2] || "");
-          }
-          if (addressParts.length >= 4) {
-            setValue("grantorCity", addressParts[3] || "");
-          }
-          if (addressParts.length >= 5) {
-            setValue("grantorState", addressParts[4] || "");
-          }
-        }
-
-        // Fill document data from snapshot
         if (snapshot.document) {
           setValue("documentLocation", snapshot.document.location || "");
-
           if (snapshot.document.documentDate) {
             const date = new Date(snapshot.document.documentDate);
-            setValue("documentDate", date.toISOString().split('T')[0]);
+            const formattedDate = date.toISOString().split('T')[0];
+            setValue("documentDate", formattedDate);
           }
         }
-      } else {
-       
-        setValue("grantorFullName", client.name || "");
-        setValue("grantorNationality", client.nationality || "");
-        setValue("grantorCpf", client.cpf || "");
-        setValue("grantorStreet", client.address || "");
       }
     }
-
-    if (documents && idForm) {
-      const doc = documents.find((d) => d.templateId === idForm);
-
-      if (doc?.lastGenerated?.dataSnapshot?.document) {
-        const documentData = doc.lastGenerated.dataSnapshot.document;
-        Object.keys(documentData).forEach((key) => {
-          if (key in AdJudiciaPowerOfAttorneySchema.fields) {
-            setValue(key as keyof AdJudiciaFormData, documentData[key] as string);
-          }
-        });
-      }
-    }
-  }, [client, documents, idForm, setValue]);
+  }, [client, setValue]);
 
   const onSubmit = async (data: AdJudiciaFormData) => {
     setIsSubmitting(true);

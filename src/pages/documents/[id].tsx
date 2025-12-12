@@ -73,7 +73,6 @@ const listForms: listFormsProps[] = [
       <ProcuracaoDeclaracaoJudicial
 client={client ? {...client, documentSelected: client?.lastDocuments?.find((item) => Util.compararStrings(item.title, 'Procuração e Declaração Judicial') )} : null}
         idForm={idForm}
-        documents={documents}
       />
     ),
     propsIcon: {
@@ -94,7 +93,7 @@ client={client ? {...client, documentSelected: client?.lastDocuments?.find((item
     form: (client, idForm, documents) => (
       <ProcuracaoPPP 
       client={client ? {...client, documentSelected: client?.lastDocuments?.find((item) => Util.compararStrings(item.title, 'Procuração Pessoa Física') )} : null}
-      idForm={idForm} documents={documents} />
+      idForm={idForm} />
     ),
     propsIcon: {
       color: "#F5F5F5",
@@ -112,7 +111,9 @@ client={client ? {...client, documentSelected: client?.lastDocuments?.find((item
     completed: "preenchido",
     icon: CircleCheckBig,
     form: (client, idForm, documents) => (
-      <AuxilioDoenca client={client} idForm={idForm} documents={documents} />
+      <AuxilioDoenca 
+            client={client ? {...client, documentSelected: client?.lastDocuments?.find((item) => Util.compararStrings(item.title, 'LOAS - Auxílio-Doença') )} : null}
+      idForm={idForm} />
     ),
     propsIcon: {
       color: "#F5F5F5",
@@ -130,7 +131,7 @@ client={client ? {...client, documentSelected: client?.lastDocuments?.find((item
     completed: "preenchido",
     icon: CircleCheckBig,
     form: (client, idForm, documents) => (
-      <LoasIdoso client={client} idForm={idForm} documents={documents} />
+      <LoasIdoso       client={client ? {...client, documentSelected: client?.lastDocuments?.find((item) => Util.compararStrings(item.title, 'LOAS - Idoso') )} : null} idForm={idForm} documents={documents} />
     ),
     propsIcon: {
       color: "#F5F5F5",
@@ -148,7 +149,8 @@ client={client ? {...client, documentSelected: client?.lastDocuments?.find((item
     completed: "preenchido",
     icon: CircleCheckBig,
     form: (client, idForm, documents) => (
-      <LoasDeficiencia client={client} idForm={idForm} documents={documents} />
+      <LoasDeficiencia    client={client ? {...client, documentSelected: client?.lastDocuments?.find((item) => Util.compararStrings(item.title, 'LOAS - Benefício para Deficiente') )} : null}
+      idForm={idForm} />
     ),
     propsIcon: {
       color: "#F5F5F5",
@@ -168,7 +170,6 @@ client={client ? {...client, documentSelected: client?.lastDocuments?.find((item
     form: (client, idForm, documents) => (
       <ProcuracaoInssForm
  client={client ? {...client, documentSelected: client?.lastDocuments?.find((item) => Util.compararStrings(item.title, 'Procuração INSS') )} : null}        idForm={idForm}
-        documents={documents}
       />
     ),
     propsIcon: {
@@ -189,8 +190,7 @@ client={client ? {...client, documentSelected: client?.lastDocuments?.find((item
     icon: CircleCheckBig,
     form: (client, idForm, documents) => (
       <AutodeclaracaoRural
-        client={client}
-        idForm={idForm}
+client={client ? {...client, documentSelected: client?.lastDocuments?.find((item) => Util.compararStrings(item.title, 'Autodeclaração Rural') )} : null}        idForm={idForm}
         documents={documents}
       />
     ),
@@ -212,9 +212,8 @@ client={client ? {...client, documentSelected: client?.lastDocuments?.find((item
     icon: Play,
     form: (client, idForm, documents) => (
       <TermoRepresentacao
-        client={client}
+       client={client ? {...client, documentSelected: client?.lastDocuments?.find((item) => Util.compararStrings(item.title, 'Termo de representação') )} : null}   
         idForm={idForm}
-        documents={documents}
       />
     ),
 
@@ -235,7 +234,7 @@ client={client ? {...client, documentSelected: client?.lastDocuments?.find((item
     icon: Play,
     form: (client, idForm, documents) => (
       <DeclaracaoNaoRecebimentoForm
-        client={client}
+           client={client ? {...client, documentSelected: client?.lastDocuments?.find((item) => Util.compararStrings(item.title, 'Declaração de não recebimento') )} : null}  
         idForm={idForm}
         documents={documents}
       />

@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "../ui/checkbox";
 import { useEffect, useState } from "react";
-import { ClientType, Documento } from "@/pages/dashboard/index";
+import { ClientType } from "@/pages/dashboard/index";
 import Api, { ApiErrorResponse } from "@/api";
 import { useGenerateDocument } from "@/contexts/GenerateContext";
 import { toast } from "sonner";
@@ -149,7 +149,6 @@ type ProcuracaoResolver = Resolver<ProcuracaoFormData>;
 interface ProcuracaoInssFormProps {
   client?: ClientType | null;
   idForm?: string;
-  documents?: Documento[];
 }
 
 export default function ProcuracaoInssForm({
@@ -191,26 +190,37 @@ export default function ProcuracaoInssForm({
   const { generatedDocument } = useGenerateDocument();
 
   useEffect(() => {
-    if (client) {
+    if (client && "id" in client) {
+      setValue("grantorName", client.name || "");
+      setValue("grantorNationality", client.nationality || "");
+      setValue("grantorMaritalStatus", client.maritalStatus || "");
+      setValue("grantorIdentity", client.rg || "");
+      setValue("grantorProfession", client.occupation || "");
 
-      if (client.documentSelected?.dataSnapshot) {
+      if (client.address) {
+        const addressParts = client.address.split(", ");
+        const street = addressParts[0] || "";
+        const number = addressParts[1] || "";
+        const neighborhood = addressParts[2] || "";
+
+        const cityStatePart = addressParts[3] || "";
+        const cityStateParts = cityStatePart.split(" - ");
+        const city = cityStateParts[0]?.trim() || "";
+        const state = cityStateParts[1]?.trim() || "";
+
+        setValue("grantorAddress", street);
+        setValue("grantorNumber", number);
+        setValue("grantorNeighborhood", neighborhood);
+        setValue("grantorCity", city);
+        setValue("grantorState", state);
+      }
+
+      if (client.cep) {
+        setValue("grantorZipCode", client.cep);
+      }
+
+      if(client.documentSelected?.dataSnapshot) {
         const snapshot = client.documentSelected.dataSnapshot;
-
-        // Grantor fields
-        if (snapshot.grantor) {
-          setValue("grantorName", snapshot.grantor.name || "");
-          setValue("grantorNationality", snapshot.grantor.nationality || "");
-          setValue("grantorMaritalStatus", snapshot.grantor.maritalStatus || "");
-          setValue("grantorIdentity", snapshot.grantor.identity || "");
-          setValue("grantorProfession", snapshot.grantor.profession || "");
-          setValue("grantorAddress", snapshot.grantor.address || "");
-          setValue("grantorNumber", snapshot.grantor.number || "");
-          setValue("grantorComplement", snapshot.grantor.complement || "");
-          setValue("grantorNeighborhood", snapshot.grantor.neighborhood || "");
-          setValue("grantorCity", snapshot.grantor.city || "");
-          setValue("grantorState", snapshot.grantor.state || "");
-          setValue("grantorZipCode", snapshot.grantor.zipCode || "");
-        }
 
         // Grantee fields
         if (snapshot.grantee) {
@@ -252,17 +262,6 @@ export default function ProcuracaoInssForm({
             setValue("date", date.toISOString().split('T')[0]);
           }
         }
-      } else {
-
-        
-        setValue("grantorName", client.name || "");
-        setValue("grantorNationality", client.nationality || "");
-        setValue("grantorMaritalStatus", client.maritalStatus || "");
-        setValue("grantorIdentity", client.rg || "");
-        setValue("grantorProfession", client.occupation || "");
-
-        
-        setValue("grantorAddress", client.address || "");
       }
     }
   }, [client, setValue]);
