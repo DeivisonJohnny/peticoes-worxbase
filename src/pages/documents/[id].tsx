@@ -47,12 +47,12 @@ const listForms: listFormsProps[] = [
     label: "Contrato de Honorários",
     completed: "preenchido",
     icon: CircleCheckBig,
-    form: (client, idForm, documents) => (
+    form: (client, idForm) => (
       <ContratoHonorarios
         client={client ? {...client, documentSelected: client?.lastDocuments?.find((item) => Util.compararStrings(item.title, 'Contrato de Honorários') )} : null}
         idForm={idForm}
-        documents={documents}
-      />
+
+        />
     ),
     propsIcon: {
       color: "#F5F5F5",
@@ -69,7 +69,7 @@ const listForms: listFormsProps[] = [
     label: "Procuração e Declaração Judicial",
     completed: "preenchido",
     icon: CircleCheckBig,
-    form: (client, idForm, documents) => (
+    form: (client, idForm) => (
       <ProcuracaoDeclaracaoJudicial
 client={client ? {...client, documentSelected: client?.lastDocuments?.find((item) => Util.compararStrings(item.title, 'Procuração e Declaração Judicial') )} : null}
         idForm={idForm}
@@ -90,7 +90,7 @@ client={client ? {...client, documentSelected: client?.lastDocuments?.find((item
     label: "Procuração Pessoa Física",
     completed: "preenchido",
     icon: CircleCheckBig,
-    form: (client, idForm, documents) => (
+    form: (client, idForm) => (
       <ProcuracaoPPP 
       client={client ? {...client, documentSelected: client?.lastDocuments?.find((item) => Util.compararStrings(item.title, 'Procuração Pessoa Física') )} : null}
       idForm={idForm} />
@@ -110,7 +110,7 @@ client={client ? {...client, documentSelected: client?.lastDocuments?.find((item
     label: "LOAS - Auxílio-Doença",
     completed: "preenchido",
     icon: CircleCheckBig,
-    form: (client, idForm, documents) => (
+    form: (client, idForm) => (
       <AuxilioDoenca 
             client={client ? {...client, documentSelected: client?.lastDocuments?.find((item) => Util.compararStrings(item.title, 'LOAS - Auxílio-Doença') )} : null}
       idForm={idForm} />
@@ -130,8 +130,8 @@ client={client ? {...client, documentSelected: client?.lastDocuments?.find((item
     label: "LOAS - Idoso",
     completed: "preenchido",
     icon: CircleCheckBig,
-    form: (client, idForm, documents) => (
-      <LoasIdoso       client={client ? {...client, documentSelected: client?.lastDocuments?.find((item) => Util.compararStrings(item.title, 'LOAS - Idoso') )} : null} idForm={idForm} documents={documents} />
+    form: (client, idForm) => (
+      <LoasIdoso       client={client ? {...client, documentSelected: client?.lastDocuments?.find((item) => Util.compararStrings(item.title, 'LOAS - Idoso') )} : null} idForm={idForm}  />
     ),
     propsIcon: {
       color: "#F5F5F5",
@@ -148,7 +148,7 @@ client={client ? {...client, documentSelected: client?.lastDocuments?.find((item
     label: "LOAS - Benefício para Deficiente",
     completed: "preenchido",
     icon: CircleCheckBig,
-    form: (client, idForm, documents) => (
+    form: (client, idForm) => (
       <LoasDeficiencia    client={client ? {...client, documentSelected: client?.lastDocuments?.find((item) => Util.compararStrings(item.title, 'LOAS - Benefício para Deficiente') )} : null}
       idForm={idForm} />
     ),
@@ -167,7 +167,7 @@ client={client ? {...client, documentSelected: client?.lastDocuments?.find((item
     label: "Procuração INSS",
     completed: "preenchido",
     icon: CircleCheckBig,
-    form: (client, idForm, documents) => (
+    form: (client, idForm) => (
       <ProcuracaoInssForm
  client={client ? {...client, documentSelected: client?.lastDocuments?.find((item) => Util.compararStrings(item.title, 'Procuração INSS') )} : null}        idForm={idForm}
       />
@@ -188,11 +188,11 @@ client={client ? {...client, documentSelected: client?.lastDocuments?.find((item
     label: "Autodeclaração Rural",
     completed: "parcial",
     icon: CircleCheckBig,
-    form: (client, idForm, documents) => (
+    form: (client, idForm) => (
       <AutodeclaracaoRural
 client={client ? {...client, documentSelected: client?.lastDocuments?.find((item) => Util.compararStrings(item.title, 'Autodeclaração Rural') )} : null}        idForm={idForm}
-        documents={documents}
-      />
+
+/>
     ),
 
     propsIcon: {
@@ -210,7 +210,7 @@ client={client ? {...client, documentSelected: client?.lastDocuments?.find((item
     label: "Termo de representação",
     completed: "vazio",
     icon: Play,
-    form: (client, idForm, documents) => (
+    form: (client, idForm) => (
       <TermoRepresentacao
        client={client ? {...client, documentSelected: client?.lastDocuments?.find((item) => Util.compararStrings(item.title, 'Termo de representação') )} : null}   
         idForm={idForm}
@@ -232,12 +232,12 @@ client={client ? {...client, documentSelected: client?.lastDocuments?.find((item
     label: "Declaração de não recebimento",
     completed: "vazio",
     icon: Play,
-    form: (client, idForm, documents) => (
+    form: (client, idForm) => (
       <DeclaracaoNaoRecebimentoForm
            client={client ? {...client, documentSelected: client?.lastDocuments?.find((item) => Util.compararStrings(item.title, 'Declaração de não recebimento') )} : null}  
         idForm={idForm}
-        documents={documents}
-      />
+
+        />
     ),
     propsIcon: {
       color: "#529FF6",
