@@ -11,7 +11,7 @@ import Util from "@/utils/Util";
 import TableEditable from "../TableEditable";
 import { Plus, Trash2 } from "lucide-react";
 import {  useEffect, useState } from "react";
-import { ClientType, Documento } from "@/pages/dashboard";
+import { ClientType } from "@/pages/dashboard";
 import Api, { ApiErrorResponse } from "@/api";
 import { toast } from "sonner";
 import { useGenerateDocument } from "@/contexts/GenerateContext";
@@ -93,7 +93,6 @@ type RuralSelfDeclarationResolver = Resolver<RuralSelfDeclarationFormData>;
 interface AutodeclaracaoRuralProps {
   client?: ClientType | null;
   idForm?: string;
-  documents?: Documento[];
 }
 
 export default function AutodeclaracaoRural({
@@ -182,7 +181,7 @@ export default function AutodeclaracaoRural({
   });
 
   useEffect(() => {
-    if (client) {
+    if (client && "id" in client) {
       setValue("fullName", client.name || "");
       setValue("nickname", client.nickname || "");
       setValue(
@@ -192,9 +191,30 @@ export default function AutodeclaracaoRural({
           : ""
       );
       setValue("birthPlace", client.birthPlace || "");
-      setValue("address", client.address || "");
       setValue("rg", client.rg || "");
       setValue("cpf", client.cpf || "");
+
+      if (client.address) {
+        const addressParts = client.address.split(", ");
+        const street = addressParts[0] || "";
+        const number = addressParts[1] || "";
+        const neighborhood = addressParts[2] || "";
+
+        const cityStatePart = addressParts[3] || "";
+        const cityStateParts = cityStatePart.split(" - ");
+        const city = cityStateParts[0]?.trim() || "";
+        const state = cityStateParts[1]?.trim() || "";
+
+        setValue("address", street);
+        setValue("addressNumber", number);
+        setValue("addressNeighborhood", neighborhood);
+        setValue("addressCity", city);
+        setValue("addressState", state);
+      }
+
+      if (client.cep) {
+        setValue("addressZipCode", client.cep);
+      }
     }
   }, [client, setValue]);
 

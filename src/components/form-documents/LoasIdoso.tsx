@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import Util from "@/utils/Util";
 import { Divider } from "antd";
-import { ClientType, Documento } from "@/pages/dashboard";
+import { ClientType } from "@/pages/dashboard";
 import { useEffect, useState } from "react";
 import Api, { ApiErrorResponse } from "@/api";
 import { toast } from "sonner";
@@ -65,7 +65,6 @@ function formatPhone(value: string) {
 interface LoasIdosoProps {
   client?: ClientType | null;
   idForm?: string;
-  documents?: Documento[];
 }
 
 export default function LoasIdoso({ client, idForm }: LoasIdosoProps) {
@@ -83,7 +82,7 @@ export default function LoasIdoso({ client, idForm }: LoasIdosoProps) {
   });
 
   useEffect(() => {
-    if (client) {
+    if (client && "id" in client) {
       setValue("fullName", client.name || "");
       setValue("nationality", client.nationality || "");
       setValue(
@@ -96,7 +95,28 @@ export default function LoasIdoso({ client, idForm }: LoasIdosoProps) {
       setValue("rg", client.rg || "");
       setValue("cpf", client.cpf || "");
       setValue("phone", client.phone || "");
-      setValue("street", client.address || "");
+
+      if (client.address) {
+        const addressParts = client.address.split(", ");
+        const street = addressParts[0] || "";
+        const number = addressParts[1] || "";
+        const neighborhood = addressParts[2] || "";
+
+        const cityStatePart = addressParts[3] || "";
+        const cityStateParts = cityStatePart.split(" - ");
+        const city = cityStateParts[0]?.trim() || "";
+        const state = cityStateParts[1]?.trim() || "";
+
+        setValue("street", street);
+        setValue("number", number);
+        setValue("neighborhood", neighborhood);
+        setValue("city", city);
+        setValue("state", state);
+      }
+
+      if (client.cep) {
+        setValue("zipCode", client.cep);
+      }
     }
   }, [client, setValue]);
 

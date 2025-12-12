@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "../ui/checkbox";
 import Util from "@/utils/Util";
 import { useEffect, useState } from "react";
-import { ClientType, Documento } from "@/pages/dashboard";
+import { ClientType } from "@/pages/dashboard";
 import Api, { ApiErrorResponse } from "@/api";
 import { toast } from "sonner";
 import { useGenerateDocument } from "@/contexts/GenerateContext";
@@ -90,7 +90,6 @@ type StatementResolver = Resolver<StatementFormData>;
 interface DeclaracaoNaoRecebimentoFormProps {
   client?: ClientType | null;
   idForm?: string;
-  documents?: Documento[];
 }
 
 export default function DeclaracaoNaoRecebimentoForm({
