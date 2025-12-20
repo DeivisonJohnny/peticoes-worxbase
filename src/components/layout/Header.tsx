@@ -35,9 +35,18 @@ export default function Header() {
 
 
   const handleLogout = async () => {
-     document.cookie =
-          "access_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
-    router.replace('/')
+    try {
+      // Chamar endpoint de logout no backend para limpar o cookie httpOnly
+      const Api = (await import("@/api")).default;
+      await Api.post("/logout").catch(() => {
+        // Ignorar erros de logout
+      });
+    } catch (error) {
+      console.error("Erro ao fazer logout:", error);
+    } finally {
+      // Redirecionar para a página de login
+      router.replace('/');
+    }
   }
   return (
     <header className="flex items-center justify-between bg-[#1C3552] h-[70px] px-[140px] max-md:px-5 relative">

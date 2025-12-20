@@ -17,8 +17,23 @@ const Api = axios.create({
   },
 });
 
+// Interceptor de requisição para debug
+Api.interceptors.request.use(
+  (config) => {
+    console.log(`🔵 [API Request] ${config.method?.toUpperCase()} ${config.url}`);
+    console.log(`🔵 [Cookies] ${document.cookie}`);
+    return config;
+  },
+  (error) => {
+    console.error('🔴 [Request Error]', error);
+    return Promise.reject(error);
+  }
+);
+
 Api.interceptors.response.use(
   (response: AxiosResponse) => {
+    console.log(`🟢 [API Response] ${response.config.method?.toUpperCase()} ${response.config.url} - Status: ${response.status}`);
+
     const contentType = response.headers["content-type"];
 
     if (
@@ -32,23 +47,33 @@ Api.interceptors.response.use(
     return response.data;
   },
 
-  (error: AxiosError) => {
+  async (error: AxiosError) => {
     if (error.response) {
       const { status, data } = error.response;
+      console.error(`🔴 [API Error] ${error.config?.method?.toUpperCase()} ${error.config?.url} - Status: ${status}`);
 
       if (status === 401) {
-        document.cookie =
-          "access_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
-
+        console.warn('⚠️ [401 Unauthorized] Cookie httpOnly pode não estar sendo enviado corretamente');
+        // httpOnly cookies são gerenciados pelo servidor
+        // Solicitar ao backend para limpar o cookie
         if (typeof window !== "undefined") {
           const currentPath = window.location.pathname;
-          const publicPaths = ["/auth/", "/public"];
+          const publicPaths = ["/auth/", "/public", "/"];
 
           const isPublicPath = publicPaths.some((path) =>
             currentPath.startsWith(path)
           );
 
           if (!isPublicPath) {
+            // Fazer logout no backend para limpar o cookie httpOnly
+            try {
+              await Api.post("/logout").catch(() => {
+                // Ignorar erros de logout
+              });
+            } catch {
+              // Ignorar erros
+            }
+
             toast.error(`Sessão expirada! Faça o login novamente.`);
             console.warn("Sessão expirada. Redirecionando para login...");
             window.location.href = "/";
