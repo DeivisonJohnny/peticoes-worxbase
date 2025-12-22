@@ -10,7 +10,7 @@ import { Checkbox } from "../ui/checkbox";
 import Util from "@/utils/Util";
 import TableEditable from "../TableEditable";
 import { Plus, Trash2 } from "lucide-react";
-import {  useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { ClientType } from "@/pages/dashboard";
 import Api, { ApiErrorResponse } from "@/api";
 import { toast } from "sonner";
@@ -80,6 +80,13 @@ const ruralSelfDeclarationSchema = yup.object({
   cooperativeEntity: yup.string(),
   cooperativeCnpj: yup.string(),
   cooperativeType: yup.string(),
+
+  ruralPeriod: yup.array().of(yup.array().of(yup.string())),
+  landCession: yup.array().of(yup.array().of(yup.string())),
+  ruralExploration: yup.array().of(yup.array().of(yup.string())),
+  employeesDetails: yup.array().of(yup.array().of(yup.string())),
+  otherActivitiesIncome: yup.array().of(yup.array().of(yup.string())),
+  specificIncomeSources: yup.array().of(yup.array().of(yup.string())),
 
   declarationLocation: yup.string().required("Local é obrigatório"),
   declarationDate: yup.string().required("Data da declaração é obrigatória"),
@@ -159,6 +166,12 @@ export default function AutodeclaracaoRural({
       hasOtherActivityOrIncome: false,
       hasSpecificIncomeSources: false,
       isCooperativeMember: false,
+      ruralPeriod: [],
+      landCession: [],
+      ruralExploration: [],
+      employeesDetails: [],
+      otherActivitiesIncome: [],
+      specificIncomeSources: [],
     },
   });
 
@@ -227,10 +240,9 @@ export default function AutodeclaracaoRural({
     };
 
     try {
-      const response = await Api.post(
-        "/documents/generate",
-        body
-      ) as { documentId?: string };
+      const response = (await Api.post("/documents/generate", body)) as {
+        documentId?: string;
+      };
       if (response?.documentId) {
         generatedDocument(response.documentId);
       }
@@ -575,6 +587,7 @@ export default function AutodeclaracaoRural({
                       },
                     ]}
                     lineInitial={3}
+                    onChange={(values) => setValue("ruralPeriod", values)}
                   />
                   <p className=" font-[300] text-[16px]  text-[#5F5F5F]  ">
                     * Proprietário / Possuidor / Comodatário / Arrendatário /
@@ -774,6 +787,7 @@ export default function AutodeclaracaoRural({
                       { label: "ÁREA CEDIDA em hectare - ha" },
                     ]}
                     lineInitial={3}
+                    onChange={(values) => setValue("landCession", values)}
                   />
                   <p className=" font-[300] text-[16px]  text-[#5F5F5F]  ">
                     *Exemplos: Arrendamento, parceria, meação, comodato, etc.
@@ -940,6 +954,7 @@ export default function AutodeclaracaoRural({
                       { label: "SUBSISTÊNCIA/VENDA" },
                     ]}
                     lineInitial={3}
+                    onChange={(values) => setValue("ruralExploration", values)}
                   />
                 </div>
 
@@ -1029,6 +1044,7 @@ export default function AutodeclaracaoRural({
                       { label: "PERÍODO (XX/XX/XXXX a XX/XX/XXXX)" },
                     ]}
                     lineInitial={3}
+                    onChange={(values) => setValue("employeesDetails", values)}
                   />
                   {errors.hasEmployees && (
                     <p className="text-red-500 text-sm">
@@ -1070,6 +1086,9 @@ export default function AutodeclaracaoRural({
                       { label: "PERÍODO (XX/XX/XXXX a XX/XX/XXXX)" },
                     ]}
                     lineInitial={3}
+                    onChange={(values) =>
+                      setValue("otherActivitiesIncome", values)
+                    }
                   />
                   <p className=" font-[300] text-[16px]  text-[#5F5F5F]  ">
                     *Pedreiro, carpinteiro, pintor, servidor público, empregado
@@ -1117,6 +1136,9 @@ export default function AutodeclaracaoRural({
                       { label: "OUTRAS INFORMAÇÕES*" },
                     ]}
                     lineInitial={3}
+                    onChange={(values) =>
+                      setValue("specificIncomeSources", values)
+                    }
                   />
                   <p className=" font-[300] text-[16px]  text-[#5F5F5F]  ">
                     * Para atividade artesanal, informar a origem da matéria
