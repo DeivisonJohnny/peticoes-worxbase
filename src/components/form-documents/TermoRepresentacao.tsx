@@ -167,7 +167,7 @@ export default function TermoRepresentacaoForm({
     }
 
     setValue("attorneyName", "CELSO DE SOUSA BRITO");
-    setValue("attorneyCpf", "254.536.858-09");
+    setValue("attorneyCpf", "254.536.858-08");
     setValue("attorneyOab", "240.574");
     setValue("attorneyNit", "125.153.288-32");
   }, [client, setValue]);
