@@ -165,6 +165,11 @@ export default function TermoRepresentacaoForm({
         setValue("representedCep", client.cep);
       }
     }
+
+    setValue("attorneyName", "CELSO DE SOUSA BRITO");
+    setValue("attorneyCpf", "254.536.858-09");
+    setValue("attorneyOab", "240.574");
+    setValue("attorneyNit", "125.153.288-32");
   }, [client, setValue]);
 
   const onSubmit = async (data: TermoRepresentacaoFormData) => {
