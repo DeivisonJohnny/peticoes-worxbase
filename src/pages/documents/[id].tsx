@@ -207,12 +207,12 @@ client={client ? {...client, documentSelected: client?.lastDocuments?.find((item
   {
     idForm: "termo-representacao",
 
-    label: "Termo de representação",
+    label: "Termo de Representação INSS",
     completed: "vazio",
     icon: Play,
     form: (client, idForm) => (
       <TermoRepresentacao
-       client={client ? {...client, documentSelected: client?.lastDocuments?.find((item) => Util.compararStrings(item.title, 'Termo de representação') )} : null}   
+       client={client ? {...client, documentSelected: client?.lastDocuments?.find((item) => Util.compararStrings(item.title, 'Termo de Representação INSS') )} : null}   
         idForm={idForm}
       />
     ),
