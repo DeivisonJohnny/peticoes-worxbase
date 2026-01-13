@@ -26,7 +26,7 @@ type UserType = {
 };
 
 // Base schema for type inference (relaxed)
-const baseSchema = yup.object().shape({
+export const baseSchema = yup.object().shape({
   name: yup.string().required(),
   email: yup.string().required(),
   password: yup.string().optional(),
@@ -112,7 +112,7 @@ export default function RegisterForm() {
 
       // If editing and password is empty, remove it from payload
       if (isEditing && !apiData.password) {
-        delete (apiData as any).password;
+        delete apiData.password;
       }
 
       if (isEditing) {
