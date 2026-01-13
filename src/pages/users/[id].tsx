@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, SubmitHandler, Resolver } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 
@@ -33,7 +33,7 @@ const baseSchema = yup.object().shape({
   confirmPassword: yup.string().optional(),
 });
 
-type FormData = yup.InferType<typeof baseSchema>;
+type UserFormData = yup.InferType<typeof baseSchema>;
 
 export default function RegisterForm() {
   const router = useRouter();
@@ -50,6 +50,7 @@ export default function RegisterForm() {
       .email("Digite um e-mail válido"),
     password: yup
       .string()
+      .optional()
       .test("password-required", "Senha é obrigatória", function (value) {
         if (!isEditing && !value) return false;
         return true;
@@ -64,6 +65,7 @@ export default function RegisterForm() {
       ),
     confirmPassword: yup
       .string()
+      .optional()
       .test("passwords-match", "As senhas não coincidem", function (value) {
         return this.parent.password === value;
       })
@@ -78,8 +80,8 @@ export default function RegisterForm() {
     handleSubmit,
     formState: { errors, isSubmitting },
     reset,
-  } = useForm<FormData>({
-    resolver: yupResolver(currentSchema),
+  } = useForm<UserFormData>({
+    resolver: yupResolver(currentSchema) as Resolver<UserFormData>,
     mode: "onChange",
     reValidateMode: "onChange",
   });
@@ -103,7 +105,7 @@ export default function RegisterForm() {
     }
   }, [id, isEditing, reset, router]);
 
-  const onSubmit = async (data: FormData) => {
+  const onSubmit: SubmitHandler<UserFormData> = async (data) => {
     try {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { confirmPassword: _, ...apiData } = data;

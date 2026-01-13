@@ -67,9 +67,8 @@ Api.interceptors.response.use(
           if (!isPublicPath) {
             // Fazer logout no backend para limpar o cookie httpOnly
             try {
-              await Api.post("/logout").catch(() => {
-                // Ignorar erros de logout
-              });
+              await Api.post("/logout");
+              window.location.href = "/";
             } catch {
               // Ignorar erros
             }
