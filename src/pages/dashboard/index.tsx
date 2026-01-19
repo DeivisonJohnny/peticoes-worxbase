@@ -48,7 +48,7 @@ const documentTypes: Documento[] = [
   },
   {
     templateId: "termo-representacao",
-    title: "Termo de representação",
+    title: "Termo de Representação INSS",
     lastGenerated: null,
     status: "nao_gerado",
   },
