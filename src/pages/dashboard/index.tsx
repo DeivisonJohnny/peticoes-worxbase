@@ -457,8 +457,8 @@ export default function Dashboard() {
       } = await Api.get(`/clients${query}`);
 
       setClients(res.data);
-      setTotalPages(res.meta.totalPages);
-      setTotalClients(res.meta.total);
+      setTotalPages(res.meta?.totalPages | 1);
+      setTotalClients(res.meta?.total);
     } catch (error) {
       const apiError = error as ApiErrorResponse;
       console.error("Erro capturado no componente:", apiError);
@@ -781,7 +781,7 @@ export default function Dashboard() {
                     )}
                   </button>
                 </div>
-                {clients.length > 0 &&
+                {clients?.length > 0 &&
                   clients?.map((client, index) => (
                     <div
                       key={index}
