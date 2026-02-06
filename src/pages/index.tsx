@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
@@ -13,8 +13,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { useRouter } from "next/router";
-import Api, { ApiErrorResponse } from "@/api";
-import { toast } from "sonner";
+import { useAuth } from "@/contexts/AuthContext";
 
 const schema = yup.object().shape({
   email: yup
@@ -34,6 +33,7 @@ export default function Login() {
   const [isLoading, setIsloading] = useState(false);
 
   const router = useRouter();
+  const { login, isAuthenticated, isLoading: authLoading } = useAuth();
 
   const {
     register,
@@ -45,23 +45,34 @@ export default function Login() {
     reValidateMode: "onChange",
   });
 
+  useEffect(() => {
+    if (isAuthenticated) {
+      router.replace("/dashboard");
+    }
+  }, [isAuthenticated, router]);
+
   const onSubmit = async (data: FormData) => {
     setIsloading(true);
     try {
-      await Api.post("/auth/login", data);
-
-      toast.success("Login realizado com sucesso!");
-      setTimeout(() => {
-        router.replace("/dashboard");
-      }, 1500);
+      await login(data.email, data.password);
     } catch (error) {
-      const apiError = error as ApiErrorResponse;
-      console.error("🚀 ~ Erro de autenticação:", apiError);
-      toast.error(`Erro de autenticação: ${apiError.message}`);
+      // Erro já tratado no contexto
     } finally {
       setIsloading(false);
     }
   };
+
+  if (authLoading) {
+    return (
+      <div className="min-h-[calc(100vh-70px)] flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+      </div>
+    );
+  }
+
+  if (isAuthenticated) {
+    return null;
+  }
 
   return (
     <div className=" py-10 ">
@@ -164,7 +175,6 @@ export default function Login() {
           </form>
         </CardContent>
       </Card>
-      ,
     </div>
   );
 }
